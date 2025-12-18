@@ -7,6 +7,7 @@ export const useDataStore = defineStore('data', () => {
   const siswa = ref<Siswa[]>([])
   const siswaMeta = ref({ page: 1, limit: 10, total: 0, last_page: 1 })
   const guru = ref<Guru[]>([])
+  const guruMeta = ref({ page: 1, limit: 10, total: 0, last_page: 1 })
   const pelaporan = ref<Pelaporan[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -89,6 +90,21 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  async function fetchGuru(
+    params: { page?: number; limit?: number; search?: string; rombel?: string } = {},
+  ) {
+    isLoading.value = true
+    try {
+      const res = await api.get('/guru', { params })
+      guru.value = res.data.data
+      guruMeta.value = res.data.meta
+    } catch (e: any) {
+      error.value = e.message
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Guru Actions
   async function addGuru(data: Omit<Guru, 'id'>) {
     isLoading.value = true
@@ -150,11 +166,13 @@ export const useDataStore = defineStore('data', () => {
     siswa,
     siswaMeta,
     guru,
+    guruMeta,
     pelaporan,
     isLoading,
     error,
     fetchInitialData,
     fetchSiswa,
+    fetchGuru,
     addSiswa,
     updateSiswa,
     deleteSiswa,

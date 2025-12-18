@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch, ref} from 'vue'
 import { useDataStore } from '@/stores/useDataStore'
+import { watchDebounced } from '@vueuse/core'
 import { useModalStore } from '@/stores/useModalStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
@@ -9,12 +10,42 @@ import { storeToRefs } from 'pinia'
 
 const dataStore = useDataStore()
 const modalStore = useModalStore()
-const { guru, isLoading } = storeToRefs(dataStore)
+const search = ref('')
+const role = ref('')
+const page = ref(1)
+const { guru, guruMeta, isLoading } = storeToRefs(dataStore)
+
+const fetchGuru = () => {
+  dataStore.fetchGuru({
+    page: page.value,
+    limit: 10,
+    search: search.value,
+  })
+}
+
+// Watch search with debounce
+watchDebounced(
+  search,
+  () => {
+    page.value = 1
+    fetchGuru()
+  },
+  { debounce: 500, maxWait: 1000 },
+)
+
+// Watch filter immediately
+watch(role, () => {
+  page.value = 1
+  fetchGuru()
+})
+
+watch(page, () => {
+  fetchGuru()
+})
 
 onMounted(() => {
-  if (guru.value.length === 0) {
-    dataStore.fetchInitialData()
-  }
+  // Always fetch fresh data on mount to ensure store is sync
+  fetchGuru()
 })
 
 const columns = [
@@ -52,6 +83,32 @@ const handleDelete = async (id: string) => {
         <Plus class="mr-2 h-4 w-4" />
         Tambah Guru
       </Button>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div class="relative w-full sm:w-64">
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Cari Nama / NIP..."
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+      </div>
+      <div class="w-full sm:w-48">
+        <select
+          v-model="role"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="">Semua Role</option>
+          <option
+            v-for="cls in ['Guru', 'Administrator']"
+            :key="cls"
+            :value="cls"
+          >
+            {{ cls }}
+          </option>
+        </select>
+      </div>
     </div>
 
     <DataTable :columns="columns" :data="guru" :is-loading="isLoading">
