@@ -9,6 +9,7 @@ export const useDataStore = defineStore('data', () => {
   const guru = ref<Guru[]>([])
   const guruMeta = ref({ page: 1, limit: 10, total: 0, last_page: 1 })
   const pelaporan = ref<Pelaporan[]>([])
+  const pelaporanMeta = ref({ page: 1, limit: 10, total: 0, last_page: 1 })
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -33,13 +34,15 @@ export const useDataStore = defineStore('data', () => {
     try {
       const [siswaRes, guruRes, pelaporanRes] = await Promise.all([
         api.get('/siswa', { params: { page: 1, limit: 10 } }).then((res) => res.data),
-        api.get('/guru').then((res) => res.data),
-        api.get('/pelaporan').then((res) => res.data),
+        api.get('/guru', { params: { page: 1, limit: 10 } }).then((res) => res.data),
+        api.get('/pelaporan', { params: { page: 1, limit: 10 } }).then((res) => res.data),
       ])
       siswa.value = siswaRes.data
       siswaMeta.value = siswaRes.meta
-      guru.value = guruRes
-      pelaporan.value = pelaporanRes
+      guru.value = guruRes.data
+      guruMeta.value = guruRes.meta
+      pelaporan.value = pelaporanRes.data
+      pelaporanMeta.value = pelaporanRes.meta
     } catch (e: any) {
       error.value = e.message
     } finally {
@@ -105,6 +108,24 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  async function fetchPelaporan(
+    params: { page?: number; limit?: number; search?: string; rombel?: string } = {},
+  ) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const res = await api.get('/pelaporan', { params })
+      pelaporan.value = res.data.data || []
+      pelaporanMeta.value = res.data.meta || { page: 1, limit: 10, total: 0, last_page: 1 }
+    } catch (e: any) {
+      error.value = e.message
+      pelaporan.value = []
+      pelaporanMeta.value = { page: 1, limit: 10, total: 0, last_page: 1 }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   // Guru Actions
   async function addGuru(data: Omit<Guru, 'id'>) {
     isLoading.value = true
@@ -162,17 +183,48 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  async function updatePelaporan(id: string, data: Partial<Pelaporan>) {
+    isLoading.value = true
+    try {
+      const res = await api.put(`/pelaporan/${id}`, data)
+      const index = pelaporan.value.findIndex((g) => g.id === id)
+      if (index !== -1) {
+        pelaporan.value[index] = res.data
+      }
+    } catch (e: any) {
+      error.value = e.message
+      throw e
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  async function deletePelaporan(id: string) {
+    isLoading.value = true
+    try {
+      await api.delete(`/pelaporan/${id}`)
+      pelaporan.value = pelaporan.value.filter((g) => g.id !== id)
+    } catch (e: any) {
+      error.value = e.message
+      throw e
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   return {
     siswa,
     siswaMeta,
     guru,
     guruMeta,
     pelaporan,
+    pelaporanMeta,
     isLoading,
     error,
     fetchInitialData,
     fetchSiswa,
     fetchGuru,
+    fetchPelaporan,
     addSiswa,
     updateSiswa,
     deleteSiswa,
@@ -180,5 +232,7 @@ export const useDataStore = defineStore('data', () => {
     updateGuru,
     deleteGuru,
     addPelaporan,
+    updatePelaporan,
+    deletePelaporan,
   }
 })

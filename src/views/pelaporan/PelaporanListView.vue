@@ -1,33 +1,54 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch, ref } from 'vue'
 import { useDataStore } from '@/stores/useDataStore'
 import { useModalStore } from '@/stores/useModalStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
-import { Plus, Eye, User, FileText } from 'lucide-vue-next'
+import { watchDebounced } from '@vueuse/core'
+import { Plus, Trophy, AlertTriangle } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 
 const dataStore = useDataStore()
 const modalStore = useModalStore()
-const { pelaporan, siswa, guru, isLoading } = storeToRefs(dataStore)
+const search = ref('')
+const page = ref(1)
+const { pelaporan, isLoading } = storeToRefs(dataStore)
 
-onMounted(() => {
-  // Ensure we have joined data
-  if (siswa.value.length === 0 || guru.value.length === 0 || pelaporan.value.length === 0) {
-    dataStore.fetchInitialData()
-  }
+const fetchPelaporan = () => {
+  dataStore.fetchPelaporan({
+    page: page.value,
+    limit: 10,
+    search: search.value,
+  })
+}
+
+// Watch search with debounce
+watchDebounced(
+  search,
+  () => {
+    page.value = 1
+    fetchPelaporan()
+  },
+  { debounce: 500, maxWait: 1000 },
+)
+
+watch(page, () => {
+  fetchPelaporan()
 })
 
-// Join data for display (naive client-side join)
+onMounted(() => {
+  // Always fetch fresh data on mount to ensure store is sync
+  fetchPelaporan()
+})
+
+// Transform data for display - backend already joins siswa and guru
 const joinedPelaporan = computed(() => {
-  return pelaporan.value.map((report) => {
-    const s = siswa.value.find((s) => s.id === report.siswa_id)
-    const g = guru.value.find((g) => g.id === report.guru_id)
+  return pelaporan.value.map((report: any) => {
     return {
       ...report,
-      nama_siswa: s ? s.nama : 'Unknown',
-      nama_guru: g ? g.nama : 'Unknown',
-      tanggal: new Date(report.tanggal).toLocaleDateString('id-ID', {
+      nama_siswa: report.siswa?.nama || 'Unknown',
+      nama_guru: report.guru?.nama || 'Unknown',
+      tanggal_display: new Date(report.tanggal).toLocaleDateString('id-ID', {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -37,12 +58,11 @@ const joinedPelaporan = computed(() => {
 })
 
 const columns = [
-  { key: 'tanggal', label: 'Tanggal' },
+  { key: 'tanggal_display', label: 'Tanggal' },
   { key: 'jenis_pelaporan', label: 'Jenis' },
   { key: 'nama_siswa', label: 'Siswa' },
   { key: 'nama_guru', label: 'Pelapor' },
-  { key: 'poin', label: 'Poin' },
-  // { key: 'actions', label: 'Detail', class: 'text-right' }, // Placeholder for detail view
+  { key: 'deskripsi', label: 'Deskripsi' },
 ]
 
 const openCreateModal = () => {
@@ -64,16 +84,18 @@ const openCreateModal = () => {
     </div>
 
     <DataTable :columns="columns" :data="joinedPelaporan" :is-loading="isLoading">
-      <template #jenis="{ item }">
+      <template #jenis_pelaporan="{ item }">
         <span
           class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
           :class="
-            item.jenis === 'prestasi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            item.jenis_pelaporan === 'prestasi'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
           "
         >
-          <Trophy v-if="item.jenis === 'prestasi'" class="mr-1 h-3 w-3" />
+          <Trophy v-if="item.jenis_pelaporan === 'prestasi'" class="mr-1 h-3 w-3" />
           <AlertTriangle v-else class="mr-1 h-3 w-3" />
-          {{ item.jenis === 'prestasi' ? 'Prestasi' : 'Pelanggaran' }}
+          {{ item.jenis_pelaporan === 'prestasi' ? 'Prestasi' : 'Pelanggaran' }}
         </span>
       </template>
     </DataTable>

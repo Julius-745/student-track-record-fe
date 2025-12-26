@@ -124,8 +124,8 @@ const handleModalSubmit = async (values: any) => {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'guru'] },
-  { name: 'Siswa', href: '/siswa', icon: Users, roles: ['admin', 'guru'] },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'guru'] },
+  { name: 'Siswa', href: '/siswa', icon: Users, roles: ['admin'] },
   { name: 'Guru', href: '/guru', icon: UserCheck, roles: ['admin'] },
   { name: 'Pelaporan', href: '/pelaporan', icon: FileText, roles: ['admin', 'guru'] },
 ]

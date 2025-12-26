@@ -14,6 +14,18 @@ const router = createRouter({
       meta: { requiresGuest: true },
     },
     {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: () => import('@/views/auth/ForgotPasswordView.vue'),
+      meta: { requiresGuest: true },
+    },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('@/views/auth/ResetPasswordView.vue'),
+      meta: { requiresGuest: true },
+    },
+    {
       path: '/',
       component: AppLayout,
       meta: { requiresAuth: true },
@@ -28,14 +40,26 @@ const router = createRouter({
           component: DashboardView,
         },
         {
+          path: 'profile',
+          name: 'profile',
+          component: () => import('@/views/profile/ProfileView.vue'),
+        },
+        {
+          path: 'profile/change-password',
+          name: 'change-password',
+          component: () => import('@/views/profile/ChangePasswordView.vue'),
+        },
+        {
           path: 'siswa',
           name: 'siswa',
           component: () => import('@/views/siswa/SiswaListView.vue'),
+          meta: { role: 'admin' },
         },
         {
           path: 'siswa/:id',
           name: 'siswa-detail',
           component: () => import('@/views/siswa/SiswaDetailView.vue'),
+          meta: { role: 'admin' },
         },
         {
           path: 'guru',
