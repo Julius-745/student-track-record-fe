@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
@@ -8,7 +8,9 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
+import AutocompleteInput from '@/components/ui/AutocompleteInput.vue'
 import { Loader2 } from 'lucide-vue-next'
+import type { Siswa } from '@/types'
 
 interface Props {
   loading?: boolean
@@ -51,25 +53,58 @@ const onSubmit = handleSubmit((values) => {
   }
 })
 
-// Ensure students are loaded
-if (siswa.value.length === 0) {
-  dataStore.fetchInitialData()
+// Search function for autocomplete using store's fetchSiswa
+const searchSiswa = async (query: string) => {
+  try {
+    await dataStore.fetchSiswa({
+      search: query,
+      limit: 10,
+    })
+
+    return siswa.value.map((s) => ({
+      value: s.id,
+      label: s.nama,
+      subtitle: `${s.rombel} - ${s.nipd}`,
+    }))
+  } catch (error) {
+    console.error('Error searching siswa:', error)
+    return []
+  }
 }
+
+// Initial options from store
+const initialSiswaOptions = computed(() => {
+  return siswa.value.map((s) => ({
+    value: s.id,
+    label: s.nama,
+    subtitle: `${s.rombel} - ${s.nipd}`,
+  }))
+})
+
+// Fetch initial siswa data on component mount
+onMounted(async () => {
+  if (siswa.value.length === 0) {
+    try {
+      await dataStore.fetchSiswa({ page: 1, limit: 10 })
+    } catch (error) {
+      console.error('Error loading initial siswa:', error)
+    }
+  }
+})
 </script>
 
 <template>
   <form @submit.prevent="onSubmit" class="space-y-4">
-    <div class="space-y-2">
-      <label class="text-sm font-medium">Siswa</label>
-      <select
-        v-model="siswa_id"
-        class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-blue-600"
-      >
-        <option value="" disabled>Pilih Siswa</option>
-        <option v-for="s in siswa" :key="s.id" :value="s.id">{{ s.nama }} ({{ s.rombel }})</option>
-      </select>
-      <span v-if="errors.siswa_id" class="text-sm text-red-500">{{ errors.siswa_id }}</span>
-    </div>
+    <!-- Autocomplete Siswa Input -->
+    <AutocompleteInput
+      v-model="siswa_id"
+      label="Siswa"
+      placeholder="Cari nama siswa..."
+      :search-fn="searchSiswa"
+      :initial-options="initialSiswaOptions"
+      :error="errors.siswa_id"
+      :debounce-ms="300"
+    />
 
     <div class="space-y-2">
       <label class="text-sm font-medium">Jenis Laporan</label>

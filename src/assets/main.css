@@ -1,9 +1,30 @@
 @import 'tailwindcss';
+@config "../../tailwind.config.ts";
 
 @layer theme {
   :root {
     --color-primary: --color-blue-600;
     --color-surface: --color-slate-50;
+    
+    /* Success colors */
+    --color-success: --color-green-500;
+    --color-success-light: --color-green-100;
+    --color-success-dark: --color-green-700;
+    
+    /* Warning colors */
+    --color-warning: --color-amber-500;
+    --color-warning-light: --color-amber-100;
+    --color-warning-dark: --color-amber-700;
+    
+    /* Error colors */
+    --color-error: --color-red-500;
+    --color-error-light: --color-red-100;
+    --color-error-dark: --color-red-700;
+    
+    /* Info colors */
+    --color-info: --color-blue-500;
+    --color-info-light: --color-blue-100;
+    --color-info-dark: --color-blue-700;
   }
 }
 

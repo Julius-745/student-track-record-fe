@@ -47,7 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
           <template v-else-if="data.length === 0">
             <tr>
               <td :colspan="columns.length" class="px-6 py-12 text-center text-gray-500">
-                No data available
+                Tidak Ada Data
               </td>
             </tr>
           </template>

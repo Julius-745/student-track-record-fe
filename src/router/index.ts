@@ -53,13 +53,11 @@ const router = createRouter({
           path: 'siswa',
           name: 'siswa',
           component: () => import('@/views/siswa/SiswaListView.vue'),
-          meta: { role: 'admin' },
         },
         {
           path: 'siswa/:id',
           name: 'siswa-detail',
           component: () => import('@/views/siswa/SiswaDetailView.vue'),
-          meta: { role: 'admin' },
         },
         {
           path: 'guru',
@@ -91,7 +89,7 @@ router.beforeEach((to, from, next) => {
     next('/')
   } else if (to.meta.role && authStore.user?.role !== to.meta.role) {
     // Role based guard
-    next('/')
+    next('/login')
   } else {
     next()
   }

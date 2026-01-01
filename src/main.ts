@@ -1,13 +1,11 @@
+// src/main.ts
 import './assets/main.css'
-
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import App from './App.vue'
 import router from './router'
-
-// Initialize Mock Adapter (Comment out when connecting to real backend)
-// import '@/services/mock';
+import { registerServiceWorker } from './registerServiceWorker'
 
 const app = createApp(App)
 
@@ -18,3 +16,5 @@ app.use(pinia)
 app.use(router)
 
 app.mount('#app')
+
+registerServiceWorker()

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { Lock, CheckCircle, XCircle } from 'lucide-vue-next'
+import { Lock, CheckCircle, XCircle, ArrowRight, Loader2 } from 'lucide-vue-next'
 import Button from '@/components/ui/Button.vue'
 import api from '@/services/api'
 import { useRouter, useRoute } from 'vue-router'
@@ -65,92 +65,110 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-      <!-- Loading State -->
-      <div v-if="isValidating" class="text-center">
-        <div
-          class="animate-spin mx-auto h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full"
-        ></div>
-        <p class="mt-4 text-gray-600">Memvalidasi token...</p>
-      </div>
-
-      <!-- Token Error State -->
-      <div v-else-if="tokenError" class="text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-          <XCircle class="h-8 w-8 text-red-600" />
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="absolute inset-0 bg-grid-white/[0.2] bg-[length:20px_20px]" />
+    <div class="max-w-md w-full relative z-10">
+      <div class="bg-white/90 backdrop-blur-xl shadow-2xl rounded-2xl p-8 border border-white/20">
+        
+        <!-- Loading State -->
+        <div v-if="isValidating" class="text-center py-10">
+          <Loader2 class="mx-auto h-12 w-12 animate-spin text-indigo-600" />
+          <h3 class="mt-4 text-lg font-medium text-gray-900">Memvalidasi Token</h3>
+          <p class="text-gray-500 text-sm">Mohon tunggu sebentar...</p>
         </div>
-        <h2 class="mt-6 text-2xl font-bold text-gray-900">Link Tidak Valid</h2>
-        <p class="mt-2 text-gray-600">{{ tokenError }}</p>
-        <div class="mt-6 space-y-3">
-          <Button @click="router.push('/forgot-password')" class="w-full"> Minta Link Baru </Button>
-          <Button variant="outline" @click="router.push('/login')" class="w-full">
-            Kembali ke Login
+
+        <!-- Token Error State -->
+        <div v-else-if="tokenError" class="text-center">
+          <div class="mx-auto h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mb-6">
+            <XCircle class="h-8 w-8 text-red-600" />
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Link Tidak Valid</h2>
+          <p class="text-gray-600 mb-8">{{ tokenError }}</p>
+          <div class="space-y-3">
+            <Button @click="router.push('/forgot-password')" class="w-full bg-indigo-600 hover:bg-indigo-700"> Minta Link Baru </Button>
+            <Button variant="outline" @click="router.push('/login')" class="w-full">
+              Kembali ke Login
+            </Button>
+          </div>
+        </div>
+
+        <!-- Success State -->
+        <div v-else-if="success" class="text-center">
+          <div class="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-6">
+            <CheckCircle class="h-8 w-8 text-green-600" />
+          </div>
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">Password Berhasil Diubah!</h2>
+          <p class="text-gray-600 mb-8">
+            Password Anda telah berhasil diperbarui. Silakan login dengan password baru Anda.
+          </p>
+          <Button class="w-full bg-indigo-600 hover:bg-indigo-700" @click="router.push('/login')"> 
+            Login Sekarang 
+            <ArrowRight class="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </div>
 
-      <!-- Success State -->
-      <div v-else-if="success" class="text-center">
-        <div class="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle class="h-8 w-8 text-green-600" />
+        <!-- Form State -->
+        <div v-else>
+          <div class="text-center mb-8">
+            <div class="mx-auto h-12 w-12 rounded-xl bg-indigo-100 flex items-center justify-center mb-4">
+              <Lock class="h-6 w-6 text-indigo-600" />
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">Reset Password</h2>
+            <p class="text-sm text-gray-600">Masukkan password baru untuk akun Anda.</p>
+          </div>
+
+          <form class="space-y-6" @submit.prevent="handleSubmit">
+            <div class="space-y-4">
+              <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
+                  Password Baru
+                </label>
+                <div class="relative">
+                  <input
+                    id="password"
+                    v-model="password"
+                    type="password"
+                    required
+                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
+                    placeholder="Minimal 6 karakter"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">
+                  Konfirmasi Password
+                </label>
+                <div class="relative">
+                  <input
+                    id="confirmPassword"
+                    v-model="confirmPassword"
+                    type="password"
+                    required
+                    class="block w-full px-4 py-3 rounded-lg border border-gray-300 bg-white/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
+                    placeholder="Ulangi password baru"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div v-if="error" class="p-4 rounded-lg bg-red-50 border border-red-100 flex items-start">
+              <XCircle class="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+              <span class="text-sm text-red-700">{{ error }}</span>
+            </div>
+
+            <Button type="submit" :disabled="isLoading" class="w-full bg-indigo-600 hover:bg-indigo-700 h-11 text-base shadow-lg hover:shadow-indigo-500/30 transition-all">
+              <Loader2 v-if="isLoading" class="mr-2 h-5 w-5 animate-spin" />
+              {{ isLoading ? 'Menyimpan Perubahan...' : 'Simpan Password Baru' }}
+            </Button>
+          </form>
         </div>
-        <h2 class="mt-6 text-2xl font-bold text-gray-900">Password Berhasil Diubah!</h2>
-        <p class="mt-2 text-gray-600">
-          Password Anda telah berhasil diperbarui. Silakan login dengan password baru Anda.
+      </div>
+          
+      <div class="mt-8 text-center">
+        <p class="text-white/80 text-sm">
+          &copy; {{ new Date().getFullYear() }} Student Track Record. All rights reserved.
         </p>
-        <Button class="mt-6" @click="router.push('/login')"> Login Sekarang </Button>
-      </div>
-
-      <!-- Form State -->
-      <div v-else>
-        <div class="text-center">
-          <div class="mx-auto h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center">
-            <Lock class="h-8 w-8 text-blue-600" />
-          </div>
-          <h2 class="mt-6 text-2xl font-bold text-gray-900">Reset Password</h2>
-          <p class="mt-2 text-gray-600">Masukkan password baru Anda.</p>
-        </div>
-
-        <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
-          <div class="space-y-4">
-            <div>
-              <label for="password" class="block text-sm font-medium text-gray-700">
-                Password Baru
-              </label>
-              <input
-                id="password"
-                v-model="password"
-                type="password"
-                required
-                class="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Minimal 6 karakter"
-              />
-            </div>
-
-            <div>
-              <label for="confirmPassword" class="block text-sm font-medium text-gray-700">
-                Konfirmasi Password
-              </label>
-              <input
-                id="confirmPassword"
-                v-model="confirmPassword"
-                type="password"
-                required
-                class="mt-1 appearance-none block w-full px-3 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ulangi password baru"
-              />
-            </div>
-          </div>
-
-          <div v-if="error" class="text-red-600 text-sm text-center bg-red-50 py-2 rounded-lg">
-            {{ error }}
-          </div>
-
-          <Button type="submit" :disabled="isLoading" class="w-full">
-            {{ isLoading ? 'Menyimpan...' : 'Simpan Password Baru' }}
-          </Button>
-        </form>
       </div>
     </div>
   </div>

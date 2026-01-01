@@ -52,12 +52,6 @@ const handleSubmit = async () => {
   <div class="max-w-md mx-auto space-y-6">
     <!-- Header -->
     <div class="flex items-center gap-4">
-      <button
-        @click="router.push('/profile')"
-        class="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-      >
-        <ArrowLeft class="h-5 w-5 text-gray-600" />
-      </button>
       <div>
         <h2 class="text-2xl font-bold tracking-tight text-gray-900">Ubah Password</h2>
         <p class="text-gray-500">Perbarui password akun Anda</p>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { Siswa, Guru, Pelaporan } from '@/types'
+import { useAlert } from '@/lib/useAlert'
 import api from '@/services/api'
 import { ref } from 'vue'
 
@@ -12,6 +13,7 @@ export const useDataStore = defineStore('data', () => {
   const pelaporanMeta = ref({ page: 1, limit: 10, total: 0, last_page: 1 })
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  const { showError, showSuccess } = useAlert()
 
   async function fetchSiswa(
     params: { page?: number; limit?: number; search?: string; rombel?: string } = {},
@@ -23,28 +25,44 @@ export const useDataStore = defineStore('data', () => {
       siswaMeta.value = res.data.meta
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
+      throw e
     } finally {
       isLoading.value = false
     }
   }
 
-  async function fetchInitialData() {
+  async function fetchInitialData(
+    isAdmin: boolean,
+  ) {
     isLoading.value = true
     error.value = null
     try {
-      const [siswaRes, guruRes, pelaporanRes] = await Promise.all([
-        api.get('/siswa', { params: { page: 1, limit: 10 } }).then((res) => res.data),
-        api.get('/guru', { params: { page: 1, limit: 10 } }).then((res) => res.data),
-        api.get('/pelaporan', { params: { page: 1, limit: 10 } }).then((res) => res.data),
-      ])
-      siswa.value = siswaRes.data
-      siswaMeta.value = siswaRes.meta
-      guru.value = guruRes.data
-      guruMeta.value = guruRes.meta
-      pelaporan.value = pelaporanRes.data
-      pelaporanMeta.value = pelaporanRes.meta
+    const promises = [
+      api.get('/pelaporan', { params: { page: 1, limit: 10 } }).then((res) => res.data),
+    ]
+    
+    // Only fetch guru if admin
+    if (isAdmin) {
+      promises.push(api.get('/guru', { params: { page: 1, limit: 10 } }).then((res) => res.data))
+      promises.push(api.get('/siswa', { params: { page: 1, limit: 10 } }).then((res) => res.data))
+    }
+    
+    const results = await Promise.all(promises)
+    
+    pelaporan.value = results[0].data
+    pelaporanMeta.value = results[0].meta
+    
+    if (isAdmin) {
+      siswa.value = results[1].data
+      siswaMeta.value = results[1].meta
+      guru.value = results[2].data
+      guruMeta.value = results[2].meta
+    }
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
+      throw e
     } finally {
       isLoading.value = false
     }
@@ -56,8 +74,10 @@ export const useDataStore = defineStore('data', () => {
     try {
       const res = await api.post('/siswa', data)
       siswa.value.push(res.data)
+      showSuccess('Berhasil menambahkan siswa')
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -71,9 +91,11 @@ export const useDataStore = defineStore('data', () => {
       const index = siswa.value.findIndex((s) => s.id === id)
       if (index !== -1) {
         siswa.value[index] = res.data
+        showSuccess('Berhasil memperbarui data siswa')
       }
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -85,8 +107,10 @@ export const useDataStore = defineStore('data', () => {
     try {
       await api.delete(`/siswa/${id}`)
       siswa.value = siswa.value.filter((s) => s.id !== id)
+      showSuccess('Berhasil menghapus data siswa')
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -94,7 +118,7 @@ export const useDataStore = defineStore('data', () => {
   }
 
   async function fetchGuru(
-    params: { page?: number; limit?: number; search?: string; rombel?: string } = {},
+    params: { page?: number; limit?: number; search?: string; role?: string } = {},
   ) {
     isLoading.value = true
     try {
@@ -103,13 +127,15 @@ export const useDataStore = defineStore('data', () => {
       guruMeta.value = res.data.meta
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
+      throw e
     } finally {
       isLoading.value = false
     }
   }
 
   async function fetchPelaporan(
-    params: { page?: number; limit?: number; search?: string; rombel?: string } = {},
+    params: { page?: number; limit?: number; search?: string; jenis_pelaporan?: string } = {},
   ) {
     isLoading.value = true
     error.value = null
@@ -121,6 +147,8 @@ export const useDataStore = defineStore('data', () => {
       error.value = e.message
       pelaporan.value = []
       pelaporanMeta.value = { page: 1, limit: 10, total: 0, last_page: 1 }
+      showError(e.message)
+      throw e
     } finally {
       isLoading.value = false
     }
@@ -132,8 +160,10 @@ export const useDataStore = defineStore('data', () => {
     try {
       const res = await api.post('/guru', data)
       guru.value.push(res.data)
+      showSuccess('Berhasil menambahkan guru')
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -147,9 +177,11 @@ export const useDataStore = defineStore('data', () => {
       const index = guru.value.findIndex((g) => g.id === id)
       if (index !== -1) {
         guru.value[index] = res.data
+        showSuccess('Berhasil memperbarui data guru')
       }
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -161,8 +193,10 @@ export const useDataStore = defineStore('data', () => {
     try {
       await api.delete(`/guru/${id}`)
       guru.value = guru.value.filter((g) => g.id !== id)
+      showSuccess('Berhasil menghapus data guru')
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -175,8 +209,10 @@ export const useDataStore = defineStore('data', () => {
     try {
       const res = await api.post('/pelaporan', data)
       pelaporan.value.push(res.data)
+      showSuccess('Berhasil membuat laporan')
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -190,9 +226,11 @@ export const useDataStore = defineStore('data', () => {
       const index = pelaporan.value.findIndex((g) => g.id === id)
       if (index !== -1) {
         pelaporan.value[index] = res.data
+        showSuccess('Berhasil memperbarui laporan')
       }
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false
@@ -204,8 +242,10 @@ export const useDataStore = defineStore('data', () => {
     try {
       await api.delete(`/pelaporan/${id}`)
       pelaporan.value = pelaporan.value.filter((g) => g.id !== id)
+      showSuccess('Berhasil menghapus laporan')
     } catch (e: any) {
       error.value = e.message
+      showError(e.message)
       throw e
     } finally {
       isLoading.value = false

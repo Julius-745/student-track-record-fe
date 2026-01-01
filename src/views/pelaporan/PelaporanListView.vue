@@ -11,14 +11,16 @@ import { storeToRefs } from 'pinia'
 const dataStore = useDataStore()
 const modalStore = useModalStore()
 const search = ref('')
+const jenis_pelaporan = ref('')
 const page = ref(1)
-const { pelaporan, isLoading } = storeToRefs(dataStore)
+const { pelaporan, pelaporanMeta, isLoading } = storeToRefs(dataStore)
 
 const fetchPelaporan = () => {
   dataStore.fetchPelaporan({
     page: page.value,
     limit: 10,
     search: search.value,
+    jenis_pelaporan: jenis_pelaporan.value || undefined,
   })
 }
 
@@ -31,6 +33,11 @@ watchDebounced(
   },
   { debounce: 500, maxWait: 1000 },
 )
+
+watch(jenis_pelaporan, () => {
+  page.value = 1
+  fetchPelaporan()
+})
 
 watch(page, () => {
   fetchPelaporan()
@@ -83,6 +90,28 @@ const openCreateModal = () => {
       </Button>
     </div>
 
+    <div class="flex flex-col sm:flex-row gap-4">
+      <div class="relative w-full sm:w-64">
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Cari Nama Siswa / Guru / Deskripsi ..."
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+      </div>
+      <div class="w-full sm:w-48">
+        <select
+          v-model="jenis_pelaporan"
+          class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="">Semua Jenis</option>
+          <option v-for="cls in ['prestasi', 'pelanggaran']" :key="cls" :value="cls">
+            {{ cls }}
+          </option>
+        </select>
+      </div>
+    </div>
+
     <DataTable :columns="columns" :data="joinedPelaporan" :is-loading="isLoading">
       <template #jenis_pelaporan="{ item }">
         <span
@@ -98,6 +127,34 @@ const openCreateModal = () => {
           {{ item.jenis_pelaporan === 'prestasi' ? 'Prestasi' : 'Pelanggaran' }}
         </span>
       </template>
+      <template #deskripsi="{ item }">
+        <span class="font-bold">
+          {{ item.deskripsi }}
+        </span>
+      </template>
     </DataTable>
+
+    <div
+      class="flex items-center justify-between border-t border-gray-200 pt-4"
+      v-if="pelaporanMeta"
+    >
+      <div class="text-sm text-gray-700">
+        Menampilkan halaman <span class="font-medium">{{ pelaporanMeta.page }}</span> dari
+        <span class="font-medium">{{ pelaporanMeta.last_page }}</span>
+      </div>
+      <div class="flex gap-2">
+        <Button variant="outline" size="sm" :disabled="pelaporanMeta.page === 1" @click="page--">
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="pelaporanMeta.page === pelaporanMeta.last_page"
+          @click="page++"
+        >
+          Next
+        </Button>
+      </div>
+    </div>
   </div>
 </template>

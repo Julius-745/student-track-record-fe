@@ -28,13 +28,15 @@ export interface Siswa {
 
 export type UserRole = 'guru' | 'admin'
 
+export type AlertType = 'success' | 'error' | 'warning' | 'info'
+
 export interface Guru {
   id: string
   nip: string
   nama: string
   posisi: string
   email: string
-  password?: string // Optional for frontend handling
+  password?: string
   role: UserRole
 }
 

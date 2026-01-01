@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useDataStore } from '@/stores/useDataStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
 import { Users, FileText } from 'lucide-vue-next'
 
 const dataStore = useDataStore()
+const authStore = useAuthStore()
 const { siswa, pelaporan } = storeToRefs(dataStore)
+const { user } = useAuthStore()
 
 onMounted(() => {
-  dataStore.fetchInitialData()
+  dataStore.fetchInitialData(user?.posisi === 'Administrator')
 })
 </script>
 
@@ -17,7 +20,10 @@ onMounted(() => {
     <h2 class="text-2xl font-bold tracking-tight text-gray-900">Dashboard</h2>
     <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <!-- Stats Cards -->
-      <div class="rounded-xl border bg-white p-6 shadow-sm flex items-center justify-between">
+      <div
+        v-if="user?.posisi === 'Administrator'"
+        class="rounded-xl border bg-white p-6 shadow-sm flex items-center justify-between"
+      >
         <div>
           <h3 class="text-sm font-medium text-gray-500">Total Siswa</h3>
           <p class="mt-2 text-3xl font-bold text-gray-900">{{ siswa.length }}</p>

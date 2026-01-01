@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useDataStore } from '@/stores/useDataStore'
 import { useModalStore } from '@/stores/useModalStore'
+import { useAuthStore } from '@/stores/useAuthStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
 import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
@@ -11,9 +12,11 @@ import { storeToRefs } from 'pinia'
 // Use stores directly
 const dataStore = useDataStore()
 const modalStore = useModalStore()
+const authStore = useAuthStore()
 
 // Destructure reactive state using storeToRefs
 const { siswa, siswaMeta, isLoading } = storeToRefs(dataStore)
+const { user } = storeToRefs(authStore)
 const search = ref('')
 const rombel = ref('')
 const page = ref(1)
@@ -57,7 +60,6 @@ const columns = [
   { key: 'nipd', label: 'NIPD' },
   { key: 'rombel', label: 'Kelas' },
   { key: 'jenis_kelamin', label: 'L/P' },
-  // { key: 'poin', label: 'Poin' }, // Removed
   { key: 'actions', label: 'Aksi', class: 'text-right' },
 ]
 
@@ -83,7 +85,7 @@ const handleDelete = async (id: string) => {
         <h2 class="text-2xl font-bold tracking-tight text-gray-900">Data Siswa</h2>
         <p class="text-gray-500">Kelola data siswa SMPN 4 Probolinggo</p>
       </div>
-      <Button @click="openCreateModal">
+      <Button v-if="user?.role === 'admin'" @click="openCreateModal">
         <Plus class="mr-2 h-4 w-4" />
         Tambah Siswa
       </Button>
@@ -95,7 +97,7 @@ const handleDelete = async (id: string) => {
         <input
           v-model="search"
           type="text"
-          placeholder="Cari Nama / NIPD..."
+          placeholder="Cari Nama Siswa / NIPD..."
           class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
@@ -119,13 +121,23 @@ const handleDelete = async (id: string) => {
     <DataTable :columns="columns" :data="siswa" :is-loading="isLoading">
       <template #actions="{ item }">
         <div class="flex justify-end gap-2">
-          <Button variant="ghost" size="icon" @click="$router.push(`/siswa/${item.id}`)">
+          <Button variant="outline" size="icon" @click="$router.push(`/siswa/${item.id}`)">
             <Eye class="h-4 w-4 text-gray-500" />
           </Button>
-          <Button variant="ghost" size="icon" @click="editSiswa(item)">
+          <Button
+            v-if="user?.role === 'admin'"
+            variant="outline"
+            size="icon"
+            @click="editSiswa(item)"
+          >
             <Pencil class="h-4 w-4 text-gray-500" />
           </Button>
-          <Button variant="ghost" size="sm" @click="handleDelete(item.id)">
+          <Button
+            v-if="user?.role === 'admin'"
+            variant="outline"
+            size="icon"
+            @click="handleDelete(item.id)"
+          >
             <Trash2 class="h-4 w-4 text-red-500" />
           </Button>
         </div>

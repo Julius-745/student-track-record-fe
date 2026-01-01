@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useModalStore } from '@/stores/useModalStore'
@@ -16,6 +16,9 @@ import {
 } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import GlobalModal from '@/components/ui/GlobalModal.vue'
+import OfflineWarning from '@/components/OfflineWarning.vue'
+import Alert from '@/components/ui/Alert.vue'
+import { useAlert } from '@/lib/useAlert'
 import GuruForm from '@/components/forms/GuruForm.vue'
 import PelaporanForm from '@/components/forms/PelaporanForm.vue'
 import SiswaForm from '@/components/forms/SiswaForm.vue'
@@ -26,9 +29,17 @@ const route = useRoute()
 const authStore = useAuthStore()
 const modalStore = useModalStore()
 const dataStore = useDataStore()
+const { alert, hideAlert } = useAlert()
 
 const { user } = storeToRefs(authStore)
 const { type: modalType, contextData: modalContextData } = storeToRefs(modalStore)
+
+onMounted(() => {
+  // Ensure refresh timer is running if user is authenticated
+  if (authStore.isAuthenticated) {
+    authStore.startRefreshTokenTimer()
+  }
+})
 
 // Dynamic Modal Component Mapping
 const modalComponent = computed(() => {
@@ -88,7 +99,7 @@ const dynamicModalProps = computed(() => {
       }
     case 'CREATE_ADMIN_GURU':
       return {
-        initialData: modalContextData.value, // if context is present, it's edit mode
+        initialData: modalContextData.value,
         loading: dataStore.isLoading,
         onSubmit: onModalCreateGuruValues,
       }
@@ -125,7 +136,7 @@ const handleModalSubmit = async (values: any) => {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'guru'] },
-  { name: 'Siswa', href: '/siswa', icon: Users, roles: ['admin'] },
+  { name: 'Siswa', href: '/siswa', icon: Users, roles: ['admin', 'guru'] },
   { name: 'Guru', href: '/guru', icon: UserCheck, roles: ['admin'] },
   { name: 'Pelaporan', href: '/pelaporan', icon: FileText, roles: ['admin', 'guru'] },
 ]
@@ -138,6 +149,26 @@ const handleLogout = () => {
 
 <template>
   <div class="min-h-screen bg-gray-100 flex flex-col lg:flex-row">
+    <!-- Offline Warning Banner -->
+    <OfflineWarning />
+
+    <!-- Global Alert -->
+    <Transition
+      enter-active-class="transform ease-out duration-300 transition"
+      enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+      enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+      leave-active-class="transition ease-in duration-100"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="alert.show"
+        class="fixed top-4 right-4 z-50 w-full max-w-sm overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5"
+      >
+        <Alert :type="alert.type" :message="alert.message" @click="hideAlert" />
+      </div>
+    </Transition>
+
     <!-- Desktop Sidebar (Hidden on mobile) -->
     <aside
       class="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-gray-200 z-30"
@@ -165,7 +196,10 @@ const handleLogout = () => {
       </nav>
 
       <div class="border-t border-gray-100 p-4">
-        <div class="flex items-center gap-3 px-2 mb-4">
+        <div
+          class="flex items-center gap-3 px-2 mb-4 cursor-pointer"
+          @click="router.push('/profile')"
+        >
           <div
             class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold"
           >
@@ -198,7 +232,7 @@ const handleLogout = () => {
             {{ String(route.name).charAt(0).toUpperCase() + String(route.name).slice(1) }}
           </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 cursor-pointer" @click="router.push('/profile')">
           <div
             class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs"
           >
@@ -244,17 +278,10 @@ const handleLogout = () => {
             <span class="text-[10px]">{{ item.name }}</span>
           </router-link>
         </template>
-        <!-- Logout on Mobile Bottom Nav? Or Profile? For now let's add a small profile/logout button or just rely on Header? 
-                 Common pattern is Profile tab or putting logout in a settings accessible place. 
-                 Let's add a 'More' or just assume the profile icon in header can logout? 
-                 Actually, let's just add a Logout button to the header or rely on a Profile page. 
-                 Since there is no profile page, let's put Logout as a small icon in the header. 
-            -->
       </nav>
     </div>
 
     <GlobalModal>
-      <!-- We will inject content dynamically based on store type -->
       <component :is="modalComponent" v-bind="dynamicModalProps" @submit="handleModalSubmit" />
     </GlobalModal>
   </div>
