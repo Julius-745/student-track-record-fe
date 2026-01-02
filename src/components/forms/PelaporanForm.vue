@@ -8,9 +8,8 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { storeToRefs } from 'pinia'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
-import AutocompleteInput from '@/components/ui/AutocompleteInput.vue'
+import AutocompleteInput from '../ui/AutoCompleteInput.vue'
 import { Loader2 } from 'lucide-vue-next'
-import type { Siswa } from '@/types'
 
 interface Props {
   loading?: boolean
@@ -27,7 +26,7 @@ const { user } = storeToRefs(authStore)
 const validationSchema = toTypedSchema(
   z.object({
     siswa_id: z.string().min(1, 'Pilih siswa'),
-    jenis: z.enum(['prestasi', 'pelanggaran'] as const),
+    jenis_pelaporan: z.enum(['prestasi', 'pelanggaran'] as const),
     deskripsi: z.string().min(1, 'Deskripsi wajib diisi'),
     tanggal: z.string().min(1, 'Tanggal wajib diisi'),
   }),
@@ -36,13 +35,14 @@ const validationSchema = toTypedSchema(
 const { handleSubmit, errors, defineField } = useForm({
   validationSchema,
   initialValues: {
+    siswa_id: '',
     tanggal: new Date().toISOString().split('T')[0],
-    jenis: 'pelanggaran',
+    jenis_pelaporan: 'pelanggaran',
   },
 })
 
 const [siswa_id] = defineField('siswa_id')
-const [jenis] = defineField('jenis')
+const [jenis_pelaporan] = defineField('jenis_pelaporan')
 const [deskripsi] = defineField('deskripsi')
 const [tanggal] = defineField('tanggal')
 
@@ -52,6 +52,8 @@ const onSubmit = handleSubmit((values) => {
     emit('submit', { ...values, guru_id: user.value.id })
   }
 })
+
+
 
 // Search function for autocomplete using store's fetchSiswa
 const searchSiswa = async (query: string) => {
@@ -113,7 +115,7 @@ onMounted(async () => {
           <input
             type="radio"
             value="prestasi"
-            v-model="jenis"
+            v-model="jenis_pelaporan"
             class="text-blue-600 focus:ring-blue-600"
           />
           <span class="text-sm">Prestasi</span>
@@ -122,13 +124,13 @@ onMounted(async () => {
           <input
             type="radio"
             value="pelanggaran"
-            v-model="jenis"
+            v-model="jenis_pelaporan"
             class="text-red-600 focus:ring-red-600"
           />
           <span class="text-sm">Pelanggaran</span>
         </label>
       </div>
-      <span v-if="errors.jenis" class="text-sm text-red-500">{{ errors.jenis }}</span>
+      <span v-if="errors.jenis_pelaporan" class="text-sm text-red-500">{{ errors.jenis_pelaporan }}</span>
     </div>
 
     <Input label="Tanggal" type="date" v-model="tanggal" :error="errors.tanggal" />

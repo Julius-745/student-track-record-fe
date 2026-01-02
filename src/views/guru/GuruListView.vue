@@ -14,6 +14,8 @@ const modalStore = useModalStore()
 const search = ref('')
 const role = ref('')
 const page = ref(1)
+const orderBy = ref('nama')
+const order = ref<'ASC' | 'DESC'>('DESC')
 const { guru, guruMeta, isLoading } = storeToRefs(dataStore)
 
 // Reset Link Modal State
@@ -29,6 +31,8 @@ const fetchGuru = () => {
     limit: 10,
     search: search.value,
     role: role.value || undefined,
+    orderBy: orderBy.value,
+    order: order.value,
   })
 }
 
@@ -58,13 +62,19 @@ onMounted(() => {
 })
 
 const columns = [
-  { key: 'nama', label: 'Nama' },
-  { key: 'nip', label: 'NIP' },
-  { key: 'posisi', label: 'Posisi' },
-  { key: 'email', label: 'Email' },
-  { key: 'role', label: 'Role' },
+  { key: 'nama', label: 'Nama', sortable: true },
+  { key: 'nip', label: 'NIP', sortable: true },
+  { key: 'posisi', label: 'Posisi', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'role', label: 'Role', sortable: true },
   { key: 'actions', label: 'Aksi', class: 'text-right' },
 ]
+
+const handleSort = (payload: { orderBy: string; order: 'ASC' | 'DESC' }) => {
+  orderBy.value = payload.orderBy
+  order.value = payload.order
+  fetchGuru()
+}
 
 const openCreateModal = () => {
   modalStore.openModal('CREATE_ADMIN_GURU')
@@ -147,7 +157,14 @@ const closeResetModal = () => {
       </div>
     </div>
 
-    <DataTable :columns="columns" :data="guru" :is-loading="isLoading">
+    <DataTable
+      :columns="columns"
+      :data="guru"
+      :is-loading="isLoading"
+      :order-by="orderBy"
+      :order="order"
+      @sort="handleSort"
+    >
       <template #role="{ item }">
         <span
           class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"

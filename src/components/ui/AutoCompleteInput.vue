@@ -9,7 +9,7 @@ interface Option {
 }
 
 interface Props {
-  modelValue: string
+  modelValue: string | undefined
   label?: string
   placeholder?: string
   error?: string

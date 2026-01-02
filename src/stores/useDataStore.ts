@@ -15,102 +15,50 @@ export const useDataStore = defineStore('data', () => {
   const error = ref<string | null>(null)
   const { showError, showSuccess } = useAlert()
 
-  async function fetchSiswa(
-    params: { page?: number; limit?: number; search?: string; rombel?: string } = {},
+  // Helper for consistent API action handling
+  async function handleAction<T>(
+    action: () => Promise<T>,
+    successMessage: string,
+    refreshFn?: () => Promise<void>,
   ) {
     isLoading.value = true
+    error.value = null
+    try {
+      const result = await action()
+      if (refreshFn) await refreshFn()
+      showSuccess(successMessage)
+      return result
+    } catch (e: any) {
+      const errorMessage = e.message || 'An error occurred'
+      error.value = errorMessage
+      showError(errorMessage)
+      throw e
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Fetching Functions
+  async function fetchSiswa(
+    params: {
+      page?: number
+      limit?: number
+      search?: string
+      rombel?: string
+      orderBy?: string
+      order?: 'ASC' | 'DESC'
+    } = {},
+  ) {
+    isLoading.value = true
+    siswa.value = []
     try {
       const res = await api.get('/siswa', { params })
       siswa.value = res.data.data
       siswaMeta.value = res.data.meta
     } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function fetchInitialData(
-    isAdmin: boolean,
-  ) {
-    isLoading.value = true
-    error.value = null
-    try {
-    const promises = [
-      api.get('/pelaporan', { params: { page: 1, limit: 10 } }).then((res) => res.data),
-    ]
-    
-    // Only fetch guru if admin
-    if (isAdmin) {
-      promises.push(api.get('/guru', { params: { page: 1, limit: 10 } }).then((res) => res.data))
-      promises.push(api.get('/siswa', { params: { page: 1, limit: 10 } }).then((res) => res.data))
-    }
-    
-    const results = await Promise.all(promises)
-    
-    pelaporan.value = results[0].data
-    pelaporanMeta.value = results[0].meta
-    
-    if (isAdmin) {
-      siswa.value = results[1].data
-      siswaMeta.value = results[1].meta
-      guru.value = results[2].data
-      guruMeta.value = results[2].meta
-    }
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  // Siswa Actions
-  async function addSiswa(data: Omit<Siswa, 'id'>) {
-    isLoading.value = true
-    try {
-      const res = await api.post('/siswa', data)
-      siswa.value.push(res.data)
-      showSuccess('Berhasil menambahkan siswa')
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function updateSiswa(id: string, data: Partial<Siswa>) {
-    isLoading.value = true
-    try {
-      const res = await api.put(`/siswa/${id}`, data)
-      const index = siswa.value.findIndex((s) => s.id === id)
-      if (index !== -1) {
-        siswa.value[index] = res.data
-        showSuccess('Berhasil memperbarui data siswa')
-      }
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  async function deleteSiswa(id: string) {
-    isLoading.value = true
-    try {
-      await api.delete(`/siswa/${id}`)
-      siswa.value = siswa.value.filter((s) => s.id !== id)
-      showSuccess('Berhasil menghapus data siswa')
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
+      const errorMessage = e.message || 'An error occurred'
+      error.value = errorMessage
+      showError(errorMessage)
       throw e
     } finally {
       isLoading.value = false
@@ -118,7 +66,14 @@ export const useDataStore = defineStore('data', () => {
   }
 
   async function fetchGuru(
-    params: { page?: number; limit?: number; search?: string; role?: string } = {},
+    params: {
+      page?: number
+      limit?: number
+      search?: string
+      role?: string
+      orderBy?: string
+      order?: 'ASC' | 'DESC'
+    } = {},
   ) {
     isLoading.value = true
     try {
@@ -126,8 +81,9 @@ export const useDataStore = defineStore('data', () => {
       guru.value = res.data.data
       guruMeta.value = res.data.meta
     } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
+      const errorMessage = e.message || 'An error occurred'
+      error.value = errorMessage
+      showError(errorMessage)
       throw e
     } finally {
       isLoading.value = false
@@ -135,7 +91,14 @@ export const useDataStore = defineStore('data', () => {
   }
 
   async function fetchPelaporan(
-    params: { page?: number; limit?: number; search?: string; jenis_pelaporan?: string } = {},
+    params: {
+      page?: number
+      limit?: number
+      search?: string
+      jenis_pelaporan?: string
+      orderBy?: string
+      order?: 'ASC' | 'DESC'
+    } = {},
   ) {
     isLoading.value = true
     error.value = null
@@ -144,113 +107,115 @@ export const useDataStore = defineStore('data', () => {
       pelaporan.value = res.data.data || []
       pelaporanMeta.value = res.data.meta || { page: 1, limit: 10, total: 0, last_page: 1 }
     } catch (e: any) {
-      error.value = e.message
+      const errorMessage = e.message || 'An error occurred'
+      error.value = errorMessage
       pelaporan.value = []
       pelaporanMeta.value = { page: 1, limit: 10, total: 0, last_page: 1 }
-      showError(e.message)
+      showError(errorMessage)
       throw e
     } finally {
       isLoading.value = false
     }
   }
+
+  async function fetchInitialData(isAdmin: boolean) {
+    isLoading.value = true
+    error.value = null
+    try {
+      const promises = [
+        api.get('/pelaporan', { params: { page: 1, limit: 10 } }).then((res) => res.data),
+      ]
+
+      if (isAdmin) {
+        promises.push(api.get('/guru', { params: { page: 1, limit: 10 } }).then((res) => res.data))
+        promises.push(api.get('/siswa', { params: { page: 1, limit: 10 } }).then((res) => res.data))
+      }
+
+      const results = await Promise.all(promises)
+
+      pelaporan.value = results[0].data
+      pelaporanMeta.value = results[0].meta
+
+      if (isAdmin) {
+        guru.value = results[1].data
+        guruMeta.value = results[1].meta
+        siswa.value = results[2].data
+        siswaMeta.value = results[2].meta
+      }
+    } catch (e: any) {
+      const errorMessage = e.message || 'An error occurred'
+      error.value = errorMessage
+      showError(errorMessage)
+      throw e
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Refresh Helpers
+  const refreshSiswa = () =>
+    fetchSiswa({
+      page: 1,
+      limit: 10,
+      search: '',
+      rombel: '',
+      orderBy: 'nama',
+      order: 'DESC',
+    })
+
+  const refreshGuru = () =>
+    fetchGuru({
+      page: 1,
+      limit: 10,
+      search: '',
+      role: '',
+      orderBy: 'nama',
+      order: 'DESC',
+    })
+
+  const refreshPelaporan = () =>
+    fetchPelaporan({
+      page: 1,
+      limit: 10,
+      search: '',
+      jenis_pelaporan: '',
+      orderBy: 'deskripsi',
+      order: 'DESC',
+    })
+
+  // Siswa Actions
+  const addSiswa = (data: Omit<Siswa, 'id'>) =>
+    handleAction(() => api.post('/siswa', data), 'Berhasil menambahkan siswa', refreshSiswa)
+
+  const updateSiswa = (id: string, data: Partial<Siswa>) =>
+    handleAction(() => api.put(`/siswa/${id}`, data), 'Berhasil memperbarui data siswa', refreshSiswa)
+
+  const deleteSiswa = (id: string) =>
+    handleAction(() => api.delete(`/siswa/${id}`), 'Berhasil menghapus data siswa', refreshSiswa)
 
   // Guru Actions
-  async function addGuru(data: Omit<Guru, 'id'>) {
-    isLoading.value = true
-    try {
-      const res = await api.post('/guru', data)
-      guru.value.push(res.data)
-      showSuccess('Berhasil menambahkan guru')
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const addGuru = (data: Omit<Guru, 'id'>) =>
+    handleAction(() => api.post('/guru', data), 'Berhasil menambahkan guru', refreshGuru)
 
-  async function updateGuru(id: string, data: Partial<Guru>) {
-    isLoading.value = true
-    try {
-      const res = await api.put(`/guru/${id}`, data)
-      const index = guru.value.findIndex((g) => g.id === id)
-      if (index !== -1) {
-        guru.value[index] = res.data
-        showSuccess('Berhasil memperbarui data guru')
-      }
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const updateGuru = (id: string, data: Partial<Guru>) =>
+    handleAction(() => api.put(`/guru/${id}`, data), 'Berhasil memperbarui data guru', refreshGuru)
 
-  async function deleteGuru(id: string) {
-    isLoading.value = true
-    try {
-      await api.delete(`/guru/${id}`)
-      guru.value = guru.value.filter((g) => g.id !== id)
-      showSuccess('Berhasil menghapus data guru')
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const deleteGuru = (id: string) =>
+    handleAction(() => api.delete(`/guru/${id}`), 'Berhasil menghapus data guru', refreshGuru)
 
   // Pelaporan Actions
-  async function addPelaporan(data: Omit<Pelaporan, 'id'>) {
-    isLoading.value = true
-    try {
-      const res = await api.post('/pelaporan', data)
-      pelaporan.value.push(res.data)
-      showSuccess('Berhasil membuat laporan')
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const addPelaporan = (data: Omit<Pelaporan, 'id'>) =>
+    handleAction(() => api.post('/pelaporan', data), 'Berhasil membuat laporan', refreshPelaporan)
 
-  async function updatePelaporan(id: string, data: Partial<Pelaporan>) {
-    isLoading.value = true
-    try {
-      const res = await api.put(`/pelaporan/${id}`, data)
-      const index = pelaporan.value.findIndex((g) => g.id === id)
-      if (index !== -1) {
-        pelaporan.value[index] = res.data
-        showSuccess('Berhasil memperbarui laporan')
-      }
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const updatePelaporan = (id: string, data: Partial<Pelaporan>) =>
+    handleAction(
+      () => api.put(`/pelaporan/${id}`, data),
+      'Berhasil memperbarui laporan',
+      refreshPelaporan,
+    )
 
-  async function deletePelaporan(id: string) {
-    isLoading.value = true
-    try {
-      await api.delete(`/pelaporan/${id}`)
-      pelaporan.value = pelaporan.value.filter((g) => g.id !== id)
-      showSuccess('Berhasil menghapus laporan')
-    } catch (e: any) {
-      error.value = e.message
-      showError(e.message)
-      throw e
-    } finally {
-      isLoading.value = false
-    }
-  }
+  const deletePelaporan = (id: string) =>
+    handleAction(() => api.delete(`/pelaporan/${id}`), 'Berhasil menghapus laporan', refreshPelaporan)
 
   return {
     siswa,

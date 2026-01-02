@@ -90,23 +90,19 @@ const dynamicModalProps = computed(() => {
       return {
         initialData: modalContextData.value,
         loading: dataStore.isLoading,
-        onSubmit: onModalEditSiswaValues,
       }
     case 'CREATE_SISWA':
       return {
         loading: dataStore.isLoading,
-        onSubmit: onModalCreateSiswaValues,
       }
     case 'CREATE_ADMIN_GURU':
       return {
         initialData: modalContextData.value,
         loading: dataStore.isLoading,
-        onSubmit: onModalCreateGuruValues,
       }
     case 'ADD_REPORT':
       return {
         loading: dataStore.isLoading,
-        onSubmit: onModalAddReportValues,
       }
     default:
       return {}

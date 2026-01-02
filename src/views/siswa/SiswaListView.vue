@@ -20,13 +20,17 @@ const { user } = storeToRefs(authStore)
 const search = ref('')
 const rombel = ref('')
 const page = ref(1)
+const orderBy = ref('nama')
+const order = ref<'ASC' | 'DESC'>('DESC')
 
 const fetchSiswa = () => {
   dataStore.fetchSiswa({
     page: page.value,
     limit: 10,
     search: search.value,
-    rombel: rombel.value || undefined, // Send undefined if empty string
+    rombel: rombel.value || undefined,
+    orderBy: orderBy.value,
+    order: order.value,
   })
 }
 
@@ -56,12 +60,18 @@ onMounted(() => {
 })
 
 const columns = [
-  { key: 'nama', label: 'Nama' },
-  { key: 'nipd', label: 'NIPD' },
-  { key: 'rombel', label: 'Kelas' },
-  { key: 'jenis_kelamin', label: 'L/P' },
+  { key: 'nama', label: 'Nama', sortable: true },
+  { key: 'nipd', label: 'NIPD', sortable: true },
+  { key: 'rombel', label: 'Kelas', sortable: true },
+  { key: 'jenis_kelamin', label: 'L/P', sortable: true },
   { key: 'actions', label: 'Aksi', class: 'text-right' },
 ]
+
+const handleSort = (payload: { orderBy: string; order: 'ASC' | 'DESC' }) => {
+  orderBy.value = payload.orderBy
+  order.value = payload.order
+  fetchSiswa()
+}
 
 const openCreateModal = () => {
   modalStore.openModal('CREATE_SISWA')
@@ -118,7 +128,14 @@ const handleDelete = async (id: string) => {
       </div>
     </div>
 
-    <DataTable :columns="columns" :data="siswa" :is-loading="isLoading">
+    <DataTable
+      :columns="columns"
+      :data="siswa"
+      :is-loading="isLoading"
+      :order-by="orderBy"
+      :order="order"
+      @sort="handleSort"
+    >
       <template #actions="{ item }">
         <div class="flex justify-end gap-2">
           <Button variant="outline" size="icon" @click="$router.push(`/siswa/${item.id}`)">

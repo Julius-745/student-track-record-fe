@@ -13,6 +13,8 @@ const modalStore = useModalStore()
 const search = ref('')
 const jenis_pelaporan = ref('')
 const page = ref(1)
+const orderBy = ref('created_at')
+const order = ref<'ASC' | 'DESC'>('DESC')
 const { pelaporan, pelaporanMeta, isLoading } = storeToRefs(dataStore)
 
 const fetchPelaporan = () => {
@@ -21,6 +23,8 @@ const fetchPelaporan = () => {
     limit: 10,
     search: search.value,
     jenis_pelaporan: jenis_pelaporan.value || undefined,
+    orderBy: orderBy.value,
+    order: order.value,
   })
 }
 
@@ -65,12 +69,18 @@ const joinedPelaporan = computed(() => {
 })
 
 const columns = [
-  { key: 'tanggal_display', label: 'Tanggal' },
-  { key: 'jenis_pelaporan', label: 'Jenis' },
-  { key: 'nama_siswa', label: 'Siswa' },
-  { key: 'nama_guru', label: 'Pelapor' },
-  { key: 'deskripsi', label: 'Deskripsi' },
+  { key: 'tanggal', label: 'Tanggal', sortable: true },
+  { key: 'jenis_pelaporan', label: 'Jenis', sortable: true },
+  { key: 'siswa.nama', label: 'Siswa', sortable: true },
+  { key: 'guru.nama', label: 'Pelapor', sortable: true },
+  { key: 'deskripsi', label: 'Deskripsi', sortable: true },
 ]
+
+const handleSort = (payload: { orderBy: string; order: 'ASC' | 'DESC' }) => {
+  orderBy.value = payload.orderBy
+  order.value = payload.order
+  fetchPelaporan()
+}
 
 const openCreateModal = () => {
   modalStore.openModal('ADD_REPORT')
@@ -112,7 +122,23 @@ const openCreateModal = () => {
       </div>
     </div>
 
-    <DataTable :columns="columns" :data="joinedPelaporan" :is-loading="isLoading">
+    <DataTable
+      :columns="columns"
+      :data="joinedPelaporan"
+      :is-loading="isLoading"
+      :order-by="orderBy"
+      :order="order"
+      @sort="handleSort"
+    >
+      <template #tanggal="{ item }">
+        {{ item.tanggal_display }}
+      </template>
+      <template #["siswa.nama"]="{ item }">
+        {{ item.nama_siswa }}
+      </template>
+      <template #["guru.nama"]="{ item }">
+        {{ item.nama_guru }}
+      </template>
       <template #jenis_pelaporan="{ item }">
         <span
           class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"

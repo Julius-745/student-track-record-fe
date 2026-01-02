@@ -1,21 +1,44 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-vue-next'
 
 interface Column {
   key: string
   label: string
   class?: string
+  sortable?: boolean
 }
 
 interface Props {
   columns: Column[]
   data: any[]
   isLoading?: boolean
+  orderBy?: string
+  order?: 'ASC' | 'DESC'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isLoading: false,
+  order: 'ASC',
 })
+
+const emit = defineEmits(['sort'])
+
+const handleSort = (key: string) => {
+  const column = props.columns.find((c) => c.key === key)
+  if (!column?.sortable) return
+
+  if (props.orderBy === key) {
+    emit('sort', {
+      orderBy: key,
+      order: props.order === 'ASC' ? 'DESC' : 'ASC',
+    })
+  } else {
+    emit('sort', {
+      orderBy: key,
+      order: 'ASC',
+    })
+  }
+}
 </script>
 
 <template>
@@ -30,9 +53,17 @@ const props = withDefaults(defineProps<Props>(), {
               :key="col.key"
               scope="col"
               class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
-              :class="col.class"
+              :class="[col.class, col.sortable ? 'cursor-pointer select-none' : '']"
+              @click="handleSort(col.key)"
             >
-              {{ col.label }}
+              <div class="flex items-center gap-1">
+                {{ col.label }}
+                <template v-if="col.sortable">
+                  <ChevronUp v-if="orderBy === col.key && order === 'ASC'" class="h-4 w-4" />
+                  <ChevronDown v-else-if="orderBy === col.key && order === 'DESC'" class="h-4 w-4" />
+                  <ChevronsUpDown v-else class="h-3 w-3 opacity-50" />
+                </template>
+              </div>
             </th>
           </tr>
         </thead>
