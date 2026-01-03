@@ -22,6 +22,7 @@ import { useAlert } from '@/lib/useAlert'
 import GuruForm from '@/components/forms/GuruForm.vue'
 import PelaporanForm from '@/components/forms/PelaporanForm.vue'
 import SiswaForm from '@/components/forms/SiswaForm.vue'
+import DeleteConfirmation from '@/components/modals/DeleteConfirmation.vue'
 import { storeToRefs } from 'pinia'
 
 const router = useRouter()
@@ -50,7 +51,10 @@ const modalComponent = computed(() => {
     case 'CREATE_ADMIN_GURU':
       return GuruForm
     case 'ADD_REPORT':
+    case 'EDIT_REPORT':
       return PelaporanForm
+    case 'CONFIRM_DELETE':
+      return DeleteConfirmation
     default:
       return null
   }
@@ -84,6 +88,25 @@ const onModalAddReportValues = async (values: any) => {
   modalStore.closeModal()
 }
 
+const onModalEditReportValues = async (values: any) => {
+  const id = modalContextData.value?.id
+  if (id) {
+    await dataStore.updatePelaporan(id, values)
+    modalStore.closeModal()
+  }
+}
+
+const onModalConfirmDelete = async () => {
+  const { id, type } = modalContextData.value || {}
+  if (!id || !type) return
+
+  if (type === 'siswa') await dataStore.deleteSiswa(id)
+  else if (type === 'guru') await dataStore.deleteGuru(id)
+  else if (type === 'pelaporan') await dataStore.deletePelaporan(id)
+
+  modalStore.closeModal()
+}
+
 const dynamicModalProps = computed(() => {
   switch (modalType.value) {
     case 'EDIT_SISWA':
@@ -104,6 +127,17 @@ const dynamicModalProps = computed(() => {
       return {
         loading: dataStore.isLoading,
       }
+    case 'EDIT_REPORT':
+      return {
+        initialData: modalContextData.value,
+        loading: dataStore.isLoading,
+      }
+    case 'CONFIRM_DELETE':
+      return {
+        loading: dataStore.isLoading,
+        title: modalContextData.value?.title,
+        message: modalContextData.value?.message,
+      }
     default:
       return {}
   }
@@ -123,6 +157,12 @@ const handleModalSubmit = async (values: any) => {
         break
       case 'ADD_REPORT':
         await onModalAddReportValues(values)
+        break
+      case 'EDIT_REPORT':
+        await onModalEditReportValues(values)
+        break
+      case 'CONFIRM_DELETE':
+        await onModalConfirmDelete()
         break
     }
   } catch (error) {
@@ -278,7 +318,12 @@ const handleLogout = () => {
     </div>
 
     <GlobalModal>
-      <component :is="modalComponent" v-bind="dynamicModalProps" @submit="handleModalSubmit" />
+      <component
+        :is="modalComponent"
+        v-bind="dynamicModalProps"
+        @submit="handleModalSubmit"
+        @cancel="modalStore.closeModal()"
+      />
     </GlobalModal>
   </div>
 </template>

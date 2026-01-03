@@ -81,10 +81,13 @@ const editSiswa = (bg: any) => {
   modalStore.openModal('EDIT_SISWA', bg)
 }
 
-const handleDelete = async (id: string) => {
-  if (confirm('Apakah anda yakin ingin menghapus data ini?')) {
-    await dataStore.deleteSiswa(id)
-  }
+const handleDelete = (id: string) => {
+  modalStore.openModal('CONFIRM_DELETE', {
+    id,
+    type: 'siswa',
+    title: 'Hapus Siswa',
+    message: 'Apakah Anda yakin ingin menghapus data siswa ini?',
+  })
 }
 </script>
 

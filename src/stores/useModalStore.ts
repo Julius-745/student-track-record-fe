@@ -1,7 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-export type ModalType = 'CREATE_SISWA' | 'EDIT_SISWA' | 'CREATE_ADMIN_GURU' | 'ADD_REPORT' | null
+export type ModalType =
+  | 'CREATE_SISWA'
+  | 'EDIT_SISWA'
+  | 'CREATE_ADMIN_GURU'
+  | 'ADD_REPORT'
+  | 'EDIT_REPORT'
+  | 'CONFIRM_DELETE'
+  | null
 
 export const useModalStore = defineStore('modal', () => {
   const isOpen = ref(false)

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useDataStore } from '@/stores/useDataStore'
 import { useAuthStore } from '@/stores/useAuthStore'
+import type { Pelaporan } from '@/types'
 import { storeToRefs } from 'pinia'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
@@ -12,6 +13,7 @@ import AutocompleteInput from '../ui/AutoCompleteInput.vue'
 import { Loader2 } from 'lucide-vue-next'
 
 interface Props {
+  initialData?: Pelaporan | null
   loading?: boolean
 }
 
@@ -32,7 +34,7 @@ const validationSchema = toTypedSchema(
   }),
 )
 
-const { handleSubmit, errors, defineField } = useForm({
+const { handleSubmit, errors, defineField, setValues, resetForm } = useForm({
   validationSchema,
   initialValues: {
     siswa_id: '',
@@ -45,6 +47,23 @@ const [siswa_id] = defineField('siswa_id')
 const [jenis_pelaporan] = defineField('jenis_pelaporan')
 const [deskripsi] = defineField('deskripsi')
 const [tanggal] = defineField('tanggal')
+
+watch(
+  () => props.initialData,
+  (newVal) => {
+    if (newVal) {
+      setValues({
+        siswa_id: newVal.siswa_id,
+        jenis_pelaporan: newVal.jenis_pelaporan,
+        deskripsi: newVal.deskripsi,
+        tanggal: newVal.tanggal ? new Date(newVal.tanggal).toISOString().split('T')[0] : '',
+      })
+    } else {
+      resetForm()
+    }
+  },
+  { immediate: true },
+)
 
 const onSubmit = handleSubmit((values) => {
   // Append current user (Guru) ID
@@ -74,13 +93,24 @@ const searchSiswa = async (query: string) => {
   }
 }
 
-// Initial options from store
+// Initial options from store + the one from initialData if editing
 const initialSiswaOptions = computed(() => {
-  return siswa.value.map((s) => ({
+  const storeOptions = siswa.value.map((s) => ({
     value: s.id,
     label: s.nama,
     subtitle: `${s.rombel} - ${s.nipd}`,
   }))
+
+  // If we have initialData and the student is not in storeOptions, add it
+  if (props.initialData?.siswa && !storeOptions.find((o) => o.value === props.initialData?.siswa?.id)) {
+    storeOptions.unshift({
+      value: props.initialData.siswa.id,
+      label: props.initialData.siswa.nama,
+      subtitle: `${props.initialData.siswa.rombel} - ${props.initialData.siswa.nipd}`,
+    })
+  }
+
+  return storeOptions
 })
 
 // Fetch initial siswa data on component mount
@@ -150,7 +180,7 @@ onMounted(async () => {
     <div class="flex justify-end gap-3 pt-4">
       <Button type="submit" :disabled="loading">
         <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
-        Simpan Laporan
+        {{ initialData?.id ? 'Perbarui Laporan' : 'Simpan Laporan' }}
       </Button>
     </div>
   </form>

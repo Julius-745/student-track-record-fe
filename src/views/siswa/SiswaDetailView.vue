@@ -5,7 +5,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import api from '@/services/api'
 import type { Siswa } from '@/types'
 import Button from '@/components/ui/Button.vue'
-import { ArrowLeft, Plus, User } from 'lucide-vue-next'
+import { ArrowLeft, Plus, User, Pencil, Trash2 } from 'lucide-vue-next'
 import DataTable from '@/components/ui/DataTable.vue'
 
 const route = useRoute()
@@ -31,14 +31,28 @@ onMounted(() => {
 
 const openAddLaporanModal = () => {
   // Pass siswa data to modal context if needed, or handle in store
-  modalStore.openModal('ADD_REPORT', siswa.value)
+  modalStore.openModal('ADD_REPORT', { siswa_id: siswa.value?.id })
+}
+
+const editPelaporan = (item: any) => {
+  modalStore.openModal('EDIT_REPORT', item)
+}
+
+const handleDelete = (id: string) => {
+  modalStore.openModal('CONFIRM_DELETE', {
+    id,
+    type: 'pelaporan',
+    title: 'Hapus Laporan',
+    message: 'Apakah Anda yakin ingin menghapus laporan ini?',
+  })
 }
 
 const columns = [
   { key: 'tanggal', label: 'Tanggal' },
   { key: 'jenis_pelaporan', label: 'Jenis' },
   { key: 'deskripsi', label: 'Deskripsi' },
-  { key: 'guru_nama', label: 'Pelapor' }, // Need to map this
+  { key: 'guru_nama', label: 'Pelapor' },
+  { key: 'actions', label: 'Aksi', class: 'text-right' },
 ]
 </script>
 
@@ -124,6 +138,17 @@ const columns = [
             >
               {{ item.jenis_pelaporan === 'prestasi' ? 'Prestasi' : 'Pelanggaran' }}
             </span>
+          </template>
+
+          <template #actions="{ item }">
+            <div class="flex justify-end gap-2">
+              <Button variant="outline" size="icon" @click="editPelaporan(item)">
+                <Pencil class="h-4 w-4 text-gray-500" />
+              </Button>
+              <Button variant="outline" size="icon" @click="handleDelete(item.id)">
+                <Trash2 class="h-4 w-4 text-red-500" />
+              </Button>
+            </div>
           </template>
         </DataTable>
       </div>

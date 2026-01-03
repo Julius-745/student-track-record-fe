@@ -78,7 +78,7 @@ const modalTitle = computed(() => {
               </div>
 
               <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <DialogTitle as="h3" class="text-base font-semibold leading-6 text-gray-900 mb-4">
+                <DialogTitle v-if="modalType !== 'CONFIRM_DELETE'" as="h3" class="text-base font-semibold leading-6 text-gray-900 mb-4">
                   <span v-if="modalType === 'CREATE_SISWA'">Tambah Siswa</span>
                   <span v-else-if="modalType === 'EDIT_SISWA'">Edit Siswa</span>
                   <span v-else-if="modalType === 'CREATE_ADMIN_GURU'">Tambah Guru/Admin</span>

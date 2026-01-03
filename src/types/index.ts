@@ -5,8 +5,8 @@ export interface Siswa {
   nipd: string
   jenis_kelamin: 'L' | 'P'
   nisn?: string
-  tempat_lahir?: string
-  tanggal_lahir?: string
+  tempat_lahir: string
+  tanggal_lahir: string
   nik?: string
   agama?: string
   alamat?: string
@@ -19,7 +19,7 @@ export interface Siswa {
   jenis_tinggal?: string
   alat_transportasi?: string
   no_hp?: string
-  email?: string
+  email: string
   skhun?: string
   penerima_kps?: boolean
   no_kps?: string
@@ -46,9 +46,10 @@ export interface Pelaporan {
   id: string
   siswa_id: string
   guru_id: string
-  jenis: JenisPelaporan
+  jenis_pelaporan: JenisPelaporan
   deskripsi: string
   tanggal: string // ISO Date string
+  siswa?: Siswa // For relations
   guru?: Guru // For relations
 }
 

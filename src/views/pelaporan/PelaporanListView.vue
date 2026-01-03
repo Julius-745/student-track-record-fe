@@ -5,7 +5,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
 import { watchDebounced } from '@vueuse/core'
-import { Plus, Trophy, AlertTriangle } from 'lucide-vue-next'
+import { Plus, Trophy, AlertTriangle, Pencil, Trash2 } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 
 const dataStore = useDataStore()
@@ -74,6 +74,7 @@ const columns = [
   { key: 'siswa.nama', label: 'Siswa', sortable: true },
   { key: 'guru.nama', label: 'Pelapor', sortable: true },
   { key: 'deskripsi', label: 'Deskripsi', sortable: true },
+  { key: 'actions', label: 'Aksi', class: 'text-right' },
 ]
 
 const handleSort = (payload: { orderBy: string; order: 'ASC' | 'DESC' }) => {
@@ -84,6 +85,19 @@ const handleSort = (payload: { orderBy: string; order: 'ASC' | 'DESC' }) => {
 
 const openCreateModal = () => {
   modalStore.openModal('ADD_REPORT')
+}
+
+const editPelaporan = (item: any) => {
+  modalStore.openModal('EDIT_REPORT', item)
+}
+
+const handleDelete = (id: string) => {
+  modalStore.openModal('CONFIRM_DELETE', {
+    id,
+    type: 'pelaporan',
+    title: 'Hapus Laporan',
+    message: 'Apakah Anda yakin ingin menghapus laporan ini?',
+  })
 }
 </script>
 
@@ -157,6 +171,17 @@ const openCreateModal = () => {
         <span class="font-bold">
           {{ item.deskripsi }}
         </span>
+      </template>
+
+      <template #actions="{ item }">
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" size="icon" @click="editPelaporan(item)">
+            <Pencil class="h-4 w-4 text-gray-500" />
+          </Button>
+          <Button variant="outline" size="icon" @click="handleDelete(item.id)">
+            <Trash2 class="h-4 w-4 text-red-500" />
+          </Button>
+        </div>
       </template>
     </DataTable>
 

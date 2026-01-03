@@ -23,12 +23,12 @@ const validationSchema = toTypedSchema(
     rombel: z.string().min(1, 'Rombel wajib diisi'),
     nisn: z.string().optional(),
     jenis_kelamin: z.enum(['L', 'P'] as const),
-    tempat_lahir: z.string().optional(),
-    tanggal_lahir: z.string().optional(),
+    tempat_lahir: z.string().min(1, 'Tempat lahir wajib diisi'),
+    tanggal_lahir: z.string().min(1, 'Tanggal lahir wajib diisi'),
     nik: z.string().optional(),
     alamat: z.string().optional(),
     no_hp: z.string().optional(),
-    email: z.string().email('Email tidak valid').optional().or(z.literal('')),
+    email: z.string().email('Email tidak valid').min(1, 'Email wajib diisi'),
   }),
 )
 

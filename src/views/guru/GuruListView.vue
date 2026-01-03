@@ -81,13 +81,16 @@ const openCreateModal = () => {
 }
 
 const editGuru = (item: any) => {
-  modalStore.openModal('CREATE_ADMIN_GURU', item) // Re-use ID but we'll map logic in Layout
+  modalStore.openModal('CREATE_ADMIN_GURU', item)
 }
 
-const handleDelete = async (id: string) => {
-  if (confirm('Apakah anda yakin ingin menghapus data ini?')) {
-    await dataStore.deleteGuru(id)
-  }
+const handleDelete = (id: string) => {
+  modalStore.openModal('CONFIRM_DELETE', {
+    id,
+    type: 'guru',
+    title: 'Hapus Guru',
+    message: 'Apakah Anda yakin ingin menghapus data guru ini?',
+  })
 }
 
 const handleGenerateLink = async (guruItem: any) => {

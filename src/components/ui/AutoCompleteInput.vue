@@ -39,16 +39,31 @@ const dropdownRef = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLInputElement | null>(null)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
-// Find initial selected option
-onMounted(() => {
+// Find selected option based on modelValue
+const syncSelectedOption = () => {
   if (props.modelValue) {
     const found = options.value.find((opt) => opt.value === props.modelValue)
     if (found) {
       selectedOption.value = found
       searchQuery.value = found.label
+    } else {
+      // If not found in current options, we might need to reset or keep it?
+      // For now, if it's external update, we might not have the label yet
+      // This is a limitation if searching isn't done.
     }
+  } else {
+    selectedOption.value = null
+    searchQuery.value = ''
   }
-})
+}
+
+watch(() => props.modelValue, syncSelectedOption)
+watch(() => props.initialOptions, (newOpts) => {
+  options.value = newOpts
+  syncSelectedOption()
+}, { deep: true })
+
+onMounted(syncSelectedOption)
 
 // Debounced search function
 const performSearch = async (query: string) => {
