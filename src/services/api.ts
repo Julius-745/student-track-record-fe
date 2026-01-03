@@ -41,31 +41,31 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const { showError } = useAlert()
-    
+
     // Handle global errors like 401 Unauthorized
     if (error.response) {
       if (error.response.status === 401) {
         // Clear auth tokens
         authToken = null
         refreshToken = null
-        
+
         // Clear localStorage
         localStorage.removeItem('token')
         localStorage.removeItem('refreshToken')
         localStorage.removeItem('user')
-        
+
         // Show error message
-        showError('Sesi Anda telah berakhir. Silakan login kembali.')
-        
-        // Redirect to login page
-        router.push('/login')
+        if (!error.config.url.includes('/auth/refresh')) {
+          showError('Sesi Anda telah berakhir. Silakan login kembali.')
+          router.push('/login')
+        }
       } else if (error.response.status >= 500) {
         showError('Terjadi kesalahan pada server. Silakan coba lagi nanti.')
       }
     } else if (error.code === 'ERR_NETWORK') {
       showError('Tidak dapat terhubung ke server. Periksa koneksi internet Anda.')
     }
-    
+
     return Promise.reject(error)
   },
 )
