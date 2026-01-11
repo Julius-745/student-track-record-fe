@@ -5,7 +5,7 @@ import { watchDebounced } from '@vueuse/core'
 import { useModalStore } from '@/stores/useModalStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
-import { Plus, Pencil, Trash2, Shield, User, Key, X, Copy, Check } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Shield, User, Key, X, Copy, Check, FileUp } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 import api from '@/services/api'
 
@@ -123,6 +123,29 @@ const closeResetModal = () => {
   resetLink.value = ''
   copied.value = false
 }
+
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const triggerImport = () => {
+  fileInput.value?.click()
+}
+
+const handleImport = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    await dataStore.importGuru(formData)
+    // Reset file input
+    target.value = ''
+  } catch (error) {
+    console.error('Import failed:', error)
+  }
+}
 </script>
 
 <template>
@@ -132,10 +155,23 @@ const closeResetModal = () => {
         <h2 class="text-2xl font-bold tracking-tight text-gray-900">Manajemen Guru & Admin</h2>
         <p class="text-gray-500">Kelola data pengajar dan administrator sistem</p>
       </div>
-      <Button @click="openCreateModal">
-        <Plus class="mr-2 h-4 w-4" />
-        Tambah Guru
-      </Button>
+      <div class="flex gap-2">
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".csv"
+          class="hidden"
+          @change="handleImport"
+        />
+        <Button variant="outline" @click="triggerImport">
+          <FileUp class="mr-2 h-4 w-4" />
+          Impor CSV
+        </Button>
+        <Button @click="openCreateModal">
+          <Plus class="mr-2 h-4 w-4" />
+          Tambah Guru
+        </Button>
+      </div>
     </div>
 
     <div class="flex flex-col sm:flex-row gap-4">

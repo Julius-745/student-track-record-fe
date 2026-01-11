@@ -6,7 +6,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
-import { Plus, Pencil, Trash2, Eye } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, Eye, FileUp } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 
 // Use stores directly
@@ -89,6 +89,29 @@ const handleDelete = (id: string) => {
     message: 'Apakah Anda yakin ingin menghapus data siswa ini?',
   })
 }
+
+const fileInput = ref<HTMLInputElement | null>(null)
+
+const triggerImport = () => {
+  fileInput.value?.click()
+}
+
+const handleImport = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  try {
+    await dataStore.importSiswa(formData)
+    // Reset file input
+    target.value = ''
+  } catch (error) {
+    console.error('Import failed:', error)
+  }
+}
 </script>
 
 <template>
@@ -98,10 +121,23 @@ const handleDelete = (id: string) => {
         <h2 class="text-2xl font-bold tracking-tight text-gray-900">Data Siswa</h2>
         <p class="text-gray-500">Kelola data siswa SMPN 4 Probolinggo</p>
       </div>
-      <Button v-if="user?.role === 'admin'" @click="openCreateModal">
-        <Plus class="mr-2 h-4 w-4" />
-        Tambah Siswa
-      </Button>
+      <div v-if="user?.role === 'admin'" class="flex gap-2">
+        <input
+          ref="fileInput"
+          type="file"
+          accept=".csv"
+          class="hidden"
+          @change="handleImport"
+        />
+        <Button variant="outline" @click="triggerImport">
+          <FileUp class="mr-2 h-4 w-4" />
+          Impor CSV
+        </Button>
+        <Button @click="openCreateModal">
+          <Plus class="mr-2 h-4 w-4" />
+          Tambah Siswa
+        </Button>
+      </div>
     </div>
 
     <!-- Filters -->

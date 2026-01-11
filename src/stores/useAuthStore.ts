@@ -21,6 +21,7 @@ export const useAuthStore = defineStore(
     const { showError, showSuccess } = useAlert()
     const user = ref<Guru | null>(null)
     const accessToken = ref<string | null>(null)
+    const refreshTokenValue = ref<string | null>(null)
     const refreshTokenTimeout = ref<number | null>(null)
     const isOnline = ref(navigator.onLine)
 
@@ -119,17 +120,17 @@ export const useAuthStore = defineStore(
 
       try {
         const res = await api.post('/auth/login', { email, password: pass })
-        const { user: userData, accessToken: token } = res.data
+        const { user: userData, accessToken: token, refreshToken: rToken } = res.data
 
-        // Store token in memory only (more secure than localStorage)
         accessToken.value = token
-        setAuthToken(token) // Update API token
+        refreshTokenValue.value = rToken
+        
+        setAuthToken(token)
+        setRefreshToken(rToken)
+        
         user.value = userData
         
-        // Sync to IndexedDB for service worker
         await syncTokenToServiceWorker(token)
-        
-        // Start automatic token refresh
         startRefreshTokenTimer()
 
         showSuccess('Login Berhasil')
@@ -155,19 +156,20 @@ export const useAuthStore = defineStore(
       }
 
       try {
-        const res = await api.post('/auth/refresh')
-        const { accessToken: newToken, user: userData } = res.data
+        const res = await api.post('/auth/refresh', { refreshToken: refreshTokenValue.value })
+        const { accessToken: newToken, refreshToken: newRefreshToken, user: userData } = res.data
 
         accessToken.value = newToken
-        setAuthToken(newToken) // Update API token
+        refreshTokenValue.value = newRefreshToken || refreshTokenValue.value // Use new or keep old
+        
+        setAuthToken(newToken)
+        setRefreshToken(refreshTokenValue.value)
 
         if (userData) {
           user.value = userData
         }
 
-        // Sync to IndexedDB for service worker
         await syncTokenToServiceWorker(newToken)
-
         startRefreshTokenTimer()
 
         return true
@@ -184,11 +186,12 @@ export const useAuthStore = defineStore(
       api.post('/auth/logout').catch(() => {})
       
       accessToken.value = null
-      setAuthToken(null) // Clear API token
+      refreshTokenValue.value = null
+      setAuthToken(null)
+      setRefreshToken(null)
       
       user.value = null
       
-      // Clear from IndexedDB
       await syncTokenToServiceWorker(null)
       
       showSuccess('Berhasil logout')
@@ -196,44 +199,32 @@ export const useAuthStore = defineStore(
 
     // Try to restore session on app startup
     async function checkAuth() {
-      try {
-        // Try to restore from IndexedDB first (for PWA refresh)
-        const storedToken = await idbGet<string>('auth_token')
-        
-        if (storedToken && !isTokenExpired()) {
-          accessToken.value = storedToken
-          setAuthToken(storedToken) // Set API token immediately
-          // Still try to refresh to get latest user data
-        }
-
-        // Try to get a new access token using refresh token (in HttpOnly cookie)
-        const res = await api.post('/auth/refresh')
-        const { accessToken: token, refreshToken: refreshToken, user: userData } = res.data
-
-        accessToken.value = token
-        setAuthToken(token)
-        setRefreshToken(refreshToken) // Update API token
-        user.value = userData
-        
-        await syncTokenToServiceWorker(token)
-        
+      // If we already have a valid token in state (restored by pinia-plugin-persistedstate)
+      if (accessToken.value && !isTokenExpired()) {
+        setAuthToken(accessToken.value)
+        setRefreshToken(refreshTokenValue.value)
         startRefreshTokenTimer()
-        
         return true
-      } catch (error) {
-        console.log('Session check failed')
-        // No valid refresh token, user needs to login
-        accessToken.value = null
-        setAuthToken(null)
-        user.value = null
-        await syncTokenToServiceWorker(null)
-        return false
       }
+
+      // If token is expired or missing, try to refresh
+      if (refreshTokenValue.value) {
+        try {
+          const success = await refreshToken()
+          return success
+        } catch (error) {
+          console.log('Session restore via refresh failed')
+          return false
+        }
+      }
+
+      return false
     }
 
     return {
       user,
       accessToken,
+      refreshTokenValue,
       isAuthenticated,
       isOnline,
       login,
@@ -248,7 +239,7 @@ export const useAuthStore = defineStore(
   {
     persist: {
       // @ts-ignore
-      paths: ['user'],
+      pick: ['user', 'accessToken', 'refreshTokenValue'],
     },
   },
 )

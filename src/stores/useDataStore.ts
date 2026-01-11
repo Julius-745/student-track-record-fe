@@ -118,6 +118,16 @@ export const useDataStore = defineStore('data', () => {
     }
   }
 
+  async function fetchStats(params: { startDate?: string; endDate?: string } = {}) {
+    try {
+      const res = await api.get('/pelaporan/stats', { params })
+      return res.data
+    } catch (e: any) {
+      console.error('Error fetching stats:', e)
+      return { prestasi: 0, pelanggaran: 0, total: 0 }
+    }
+  }
+
   async function fetchInitialData(isAdmin: boolean) {
     isLoading.value = true
     error.value = null
@@ -193,6 +203,13 @@ export const useDataStore = defineStore('data', () => {
   const deleteSiswa = (id: string) =>
     handleAction(() => api.delete(`/siswa/${id}`), 'Berhasil menghapus data siswa', refreshSiswa)
 
+  const importSiswa = (formData: FormData) =>
+    handleAction(
+      () => api.post('/siswa/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+      'Berhasil mengimpor data siswa',
+      refreshSiswa,
+    )
+
   // Guru Actions
   const addGuru = (data: Omit<Guru, 'id'>) =>
     handleAction(() => api.post('/guru', data), 'Berhasil menambahkan guru', refreshGuru)
@@ -202,6 +219,13 @@ export const useDataStore = defineStore('data', () => {
 
   const deleteGuru = (id: string) =>
     handleAction(() => api.delete(`/guru/${id}`), 'Berhasil menghapus data guru', refreshGuru)
+
+  const importGuru = (formData: FormData) =>
+    handleAction(
+      () => api.post('/guru/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+      'Berhasil mengimpor data guru',
+      refreshGuru,
+    )
 
   // Pelaporan Actions
   const addPelaporan = (data: Omit<Pelaporan, 'id'>) =>
@@ -230,12 +254,15 @@ export const useDataStore = defineStore('data', () => {
     fetchSiswa,
     fetchGuru,
     fetchPelaporan,
+    fetchStats,
     addSiswa,
     updateSiswa,
     deleteSiswa,
+    importSiswa,
     addGuru,
     updateGuru,
     deleteGuru,
+    importGuru,
     addPelaporan,
     updatePelaporan,
     deletePelaporan,
