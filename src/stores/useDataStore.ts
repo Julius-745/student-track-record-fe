@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { defineStore } from 'pinia'
 import type { Siswa, Guru, Pelaporan } from '@/types'
 import { useAlert } from '@/lib/useAlert'
@@ -241,6 +242,25 @@ export const useDataStore = defineStore('data', () => {
   const deletePelaporan = (id: string) =>
     handleAction(() => api.delete(`/pelaporan/${id}`), 'Berhasil menghapus laporan', refreshPelaporan)
 
+  // Download Templates
+  const downloadTemplate = async (url: string, filename: string) => {
+    try {
+      const response = await api.get(url, { responseType: 'blob' })
+      const blob = new Blob([response.data], { type: 'text/csv' })
+      const link = document.createElement('a')
+      link.href = window.URL.createObjectURL(blob)
+      link.download = filename
+      link.click()
+      window.URL.revokeObjectURL(link.href)
+    } catch (e: any) {
+      showError('Gagal mengunduh template')
+      console.error(e)
+    }
+  }
+
+  const downloadSiswaTemplate = () => downloadTemplate('/siswa/template/download', 'template_siswa.csv')
+  const downloadGuruTemplate = () => downloadTemplate('/guru/template/download', 'template_guru.csv')
+
   return {
     siswa,
     siswaMeta,
@@ -266,5 +286,7 @@ export const useDataStore = defineStore('data', () => {
     addPelaporan,
     updatePelaporan,
     deletePelaporan,
+    downloadSiswaTemplate,
+    downloadGuruTemplate,
   }
 })
