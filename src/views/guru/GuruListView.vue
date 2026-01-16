@@ -63,8 +63,6 @@ onMounted(() => {
 
 const columns = [
   { key: 'nama', label: 'Nama', sortable: true },
-  { key: 'nip', label: 'NIP', sortable: true },
-  { key: 'posisi', label: 'Posisi', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
   { key: 'role', label: 'Role', sortable: true },
   { key: 'actions', label: 'Aksi', class: 'text-right' },
@@ -156,13 +154,7 @@ const handleImport = async (event: Event) => {
         <p class="text-gray-500">Kelola data pengajar dan administrator sistem</p>
       </div>
       <div class="flex gap-2">
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".csv"
-          class="hidden"
-          @change="handleImport"
-        />
+        <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleImport" />
         <Button variant="outline" @click="triggerImport">
           <FileUp class="mr-2 h-4 w-4" />
           Impor CSV

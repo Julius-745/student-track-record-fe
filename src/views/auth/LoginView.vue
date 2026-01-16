@@ -7,10 +7,13 @@ import * as z from 'zod'
 import { useAuthStore } from '@/stores/useAuthStore'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
+import Alert from '@/components/ui/Alert.vue'
 import { Loader2 } from 'lucide-vue-next'
+import { useAlert } from '@/lib/useAlert'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { alert, hideAlert } = useAlert()
 
 const schema = toTypedSchema(
   z.object({
@@ -43,7 +46,25 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+  <div
+    class="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8 bg-[url(https://ik.imagekit.io/uavheojaq/SPANEX/main_image.jpg)] bg-no-repeat bg-cover"
+  >
+    <Transition
+      enter-active-class="transform ease-out duration-300 transition"
+      enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+      enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+      leave-active-class="transition ease-in duration-100"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="alert.show"
+        class="fixed top-4 right-4 z-50 w-full max-w-sm overflow-hidden rounded-lg shadow-lg ring-1 ring-black ring-opacity-5"
+      >
+        <Alert :type="alert.type" :message="alert.message" @click="hideAlert" />
+      </div>
+    </Transition>
+
     <div class="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
       <div class="text-center">
         <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Sign in</h2>

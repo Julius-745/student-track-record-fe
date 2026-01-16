@@ -270,9 +270,13 @@ const handleLogout = () => {
         </div>
         <div class="flex items-center gap-2 cursor-pointer" @click="router.push('/profile')">
           <div
-            class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs"
+            class="h-10 w-10 rounded-full overflow-hidden bg-white shadow-lg flex items-center justify-center"
           >
-            {{ user?.nama?.charAt(0) }}
+            <img
+              src="/android/android-launchericon-512-512.png"
+              class="h-full w-full object-cover scale-125"
+              alt="icon"
+            />
           </div>
         </div>
       </header>

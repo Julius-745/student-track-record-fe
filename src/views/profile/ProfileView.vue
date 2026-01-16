@@ -40,9 +40,13 @@ const handleLogout = () => {
       <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-8">
         <div class="flex flex-col items-center">
           <div
-            class="h-24 w-24 rounded-full bg-white flex items-center justify-center text-blue-600 text-3xl font-bold shadow-lg"
+            class="h-24 w-24 rounded-full overflow-hidden bg-white shadow-lg flex items-center justify-center"
           >
-            {{ user?.nama?.charAt(0)?.toUpperCase() || 'U' }}
+            <img
+              src="/android/android-launchericon-512-512.png"
+              class="h-full w-full object-cover scale-125"
+              alt="icon"
+            />
           </div>
           <h3 class="mt-4 text-xl font-semibold text-white">{{ user?.nama || 'User' }}</h3>
           <span

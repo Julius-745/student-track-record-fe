@@ -19,7 +19,6 @@ const emit = defineEmits(['submit'])
 const validationSchema = toTypedSchema(
   z.object({
     nama: z.string().min(1, 'Nama wajib diisi'),
-    nipd: z.string().min(1, 'NIPD wajib diisi'),
     rombel: z.string().min(1, 'Rombel wajib diisi'),
     nisn: z.string().optional(),
     jenis_kelamin: z.enum(['L', 'P'] as const),
@@ -37,7 +36,6 @@ const { handleSubmit, errors, defineField, resetForm, setValues } = useForm({
 })
 
 const [nama] = defineField('nama')
-const [nipd] = defineField('nipd')
 const [rombel] = defineField('rombel')
 const [nisn] = defineField('nisn')
 const [jenis_kelamin] = defineField('jenis_kelamin')
@@ -53,7 +51,6 @@ watch(
     if (newVal) {
       setValues({
         nama: newVal.nama,
-        nipd: newVal.nipd,
         rombel: newVal.rombel,
         nisn: newVal.nisn,
         jenis_kelamin: newVal.jenis_kelamin as 'L' | 'P',
@@ -80,7 +77,6 @@ const onSubmit = handleSubmit((values) => {
   <form @submit.prevent="onSubmit" class="space-y-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <Input label="Nama Lengkap" v-model="nama" :error="errors.nama" placeholder="Nama Siswa" />
-      <Input label="NIPD" v-model="nipd" :error="errors.nipd" placeholder="Nomor Induk" />
       <Input label="Rombel" v-model="rombel" :error="errors.rombel" placeholder="Kelas 7A" />
       <Input label="NISN" v-model="nisn" :error="errors.nisn" />
 

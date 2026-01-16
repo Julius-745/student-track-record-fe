@@ -19,9 +19,7 @@ const emit = defineEmits(['submit'])
 const validationSchema = toTypedSchema(
   z.object({
     nama: z.string().min(1, 'Nama wajib diisi'),
-    nip: z.string().min(1, 'NIP wajib diisi'),
     email: z.string().email('Email tidak valid'),
-    posisi: z.string().min(1, 'Posisi wajib diisi'),
     role: z.enum(['guru', 'admin'] as const),
     password: z.string().min(6, 'Password minimal 6 karakter').optional(), // Optional for edit if not changing
   }),
@@ -32,9 +30,7 @@ const { handleSubmit, errors, defineField, resetForm, setValues } = useForm({
 })
 
 const [nama] = defineField('nama')
-const [nip] = defineField('nip')
 const [email] = defineField('email')
-const [posisi] = defineField('posisi')
 const [role] = defineField('role')
 const [password] = defineField('password')
 
@@ -44,9 +40,7 @@ watch(
     if (newVal) {
       setValues({
         nama: newVal.nama,
-        nip: newVal.nip,
         email: newVal.email,
-        posisi: newVal.posisi,
         role: newVal.role,
         password: '', // Don't populate password
       })
@@ -69,14 +63,7 @@ const onSubmit = handleSubmit((values) => {
 <template>
   <form @submit.prevent="onSubmit" class="space-y-4">
     <Input label="Nama Lengkap" v-model="nama" :error="errors.nama" />
-    <Input label="NIP" v-model="nip" :error="errors.nip" />
     <Input label="Email" type="email" v-model="email" :error="errors.email" />
-    <Input
-      label="Posisi/Jabatan"
-      v-model="posisi"
-      :error="errors.posisi"
-      placeholder="Guru Matematika"
-    />
 
     <div class="space-y-2">
       <label class="text-sm font-medium">Role</label>

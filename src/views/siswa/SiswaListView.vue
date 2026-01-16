@@ -61,7 +61,6 @@ onMounted(() => {
 
 const columns = [
   { key: 'nama', label: 'Nama', sortable: true },
-  { key: 'nipd', label: 'NIPD', sortable: true },
   { key: 'rombel', label: 'Kelas', sortable: true },
   { key: 'jenis_kelamin', label: 'L/P', sortable: true },
   { key: 'actions', label: 'Aksi', class: 'text-right' },
@@ -122,13 +121,7 @@ const handleImport = async (event: Event) => {
         <p class="text-gray-500">Kelola data siswa SMPN 4 Probolinggo</p>
       </div>
       <div v-if="user?.role === 'admin'" class="flex gap-2">
-        <input
-          ref="fileInput"
-          type="file"
-          accept=".csv"
-          class="hidden"
-          @change="handleImport"
-        />
+        <input ref="fileInput" type="file" accept=".csv" class="hidden" @change="handleImport" />
         <Button variant="outline" @click="triggerImport">
           <FileUp class="mr-2 h-4 w-4" />
           Impor CSV
