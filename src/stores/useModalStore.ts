@@ -13,9 +13,9 @@ export type ModalType =
 export const useModalStore = defineStore('modal', () => {
   const isOpen = ref(false)
   const type = ref<ModalType>(null)
-  const contextData = ref<any | null>(null)
+  const contextData = ref<unknown | null>(null)
 
-  function openModal(modalType: ModalType, data: any = null) {
+  function openModal(modalType: ModalType, data: unknown = null) {
     isOpen.value = true
     type.value = modalType
     contextData.value = data

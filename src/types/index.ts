@@ -24,6 +24,8 @@ export interface Siswa {
   penerima_kps?: boolean
   no_kps?: string
   pelaporans?: Pelaporan[]
+  totalPrestasi: number
+  totalPelanggaran: number
 }
 
 export type UserRole = 'guru' | 'admin'

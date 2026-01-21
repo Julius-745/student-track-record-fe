@@ -10,13 +10,14 @@ import DataTable from '@/components/ui/DataTable.vue'
 
 const route = useRoute()
 const modalStore = useModalStore()
+const jenis_pelaporan = ref('')
 const siswa = ref<Siswa | null>(null)
 const isLoading = ref(false)
 
-const fetchDetail = async () => {
+const fetchDetail = async (jenis_pelaporan?: string) => {
   isLoading.value = true
   try {
-    const res = await api.get(`/siswa/${route.params.id}`)
+    const res = await api.get(`/siswa/${route.params.id}${jenis_pelaporan ? `?jenis_pelaporan=${jenis_pelaporan}` : ''}`)
     siswa.value = res.data
   } catch (e) {
     console.error(e)
@@ -30,11 +31,19 @@ onMounted(() => {
 })
 
 const openAddLaporanModal = () => {
-  // Pass siswa data to modal context if needed, or handle in store
-  modalStore.openModal('ADD_REPORT', { siswa_id: siswa.value?.id })
+  if (!siswa.value) return
+
+  modalStore.openModal('ADD_REPORT', {
+    siswa_id: siswa.value.id,
+    siswa_nama: siswa.value.nama,
+    rombel: siswa.value.rombel,
+    nipd: siswa.value.nipd,
+    tanggal: new Date().toISOString(),
+    deskripsi: '',
+  })
 }
 
-const editPelaporan = (item: any) => {
+const editPelaporan = (item: unknown) => {
   modalStore.openModal('EDIT_REPORT', item)
 }
 
@@ -108,6 +117,18 @@ const columns = [
                 siswa.alamat || '-'
               }}</span>
             </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-500">Total Prestasi</span>
+              <span class="font-medium text-gray-900 text-center w-5 truncate bg-green-100 rounded">{{
+                siswa.totalPrestasi || 0
+              }}</span>
+            </div>
+             <div class="flex justify-between text-sm">
+              <span class="text-gray-500">Total Pelanggaran</span>
+              <span class="font-medium text-gray-900 text-center w-5 truncate bg-red-100 rounded">{{
+                siswa.totalPelanggaran || 0
+              }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -116,10 +137,18 @@ const columns = [
       <div class="lg:col-span-2 space-y-6">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold text-gray-900">Riwayat Laporan</h3>
+          <div class="flex flex-row gap-5">
+          <select  v-model="jenis_pelaporan" @change="fetchDetail(jenis_pelaporan)"
+          class="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-blue-600">
+            <option selected value="">Semua</option>
+            <option value="prestasi">Prestasi</option>
+            <option value="pelanggaran">Pelanggaran</option>
+          </select>
           <Button @click="openAddLaporanModal">
             <Plus class="mr-2 h-4 w-4" />
             Tambah Laporan
           </Button>
+          </div>
         </div>
 
         <DataTable

@@ -23,6 +23,27 @@ const lastDay = new Date().toISOString().split('T')[0]
 
 const startDate = ref(firstDay)
 const endDate = ref(lastDay)
+const selectedPeriod = ref('month')
+
+const applyPeriodFilter = () => {
+  const curr = new Date()
+  if (selectedPeriod.value === 'month') {
+    startDate.value = new Date(curr.getFullYear(), curr.getMonth(), 1)
+      .toISOString()
+      .split('T')[0]
+    endDate.value = new Date(curr.getFullYear(), curr.getMonth() + 1, 0)
+      .toISOString()
+      .split('T')[0]
+  } else if (selectedPeriod.value === 'week') {
+    // Current week (Monday to Sunday)
+    const first = curr.getDate() - curr.getDay() + (curr.getDay() === 0 ? -6 : 1)
+    const start = new Date(curr.setDate(first))
+    const end = new Date(curr.setDate(first + 6))
+
+    startDate.value = start.toISOString().split('T')[0]
+    endDate.value = end.toISOString().split('T')[0]
+  }
+}
 
 const loadStats = async () => {
   isFiltering.value = true
@@ -54,31 +75,48 @@ watch([startDate, endDate], loadStats)
       </div>
 
       <!-- Date Filter -->
-      <div
-        class="flex flex-row items-center gap-2 sm:gap-3 bg-white p-2 sm:p-3 rounded-xl border shadow-sm overflow-hidden relative"
-      >
-        <div
-          v-if="isFiltering"
-          class="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center"
-        >
-          <Loader2 class="h-4 w-4 text-blue-600 animate-spin" />
+      <!-- Date Filter -->
+      <div class="flex gap-2">
+        <div class="bg-white p-2 sm:p-3 rounded-xl border shadow-sm">
+          <select
+            v-model="selectedPeriod"
+            @change="applyPeriodFilter"
+            class="text-[13px] sm:text-sm border-none focus:ring-0 p-0 text-gray-600 bg-transparent font-medium cursor-pointer"
+          >
+            <option value="all">Semua</option>
+            <option value="month">Bulan Ini</option>
+            <option value="week">Minggu Ini</option>
+          </select>
         </div>
 
-        <div class="flex items-center gap-1.5 sm:gap-2">
-          <Calendar class="hidden xs:block h-4 w-4 text-gray-400" />
-          <input
-            type="date"
-            v-model="startDate"
-            class="text-[13px] sm:text-sm border-none focus:ring-0 p-0 w-[105px] sm:w-32 bg-transparent"
-          />
-        </div>
-        <div class="text-gray-300">|</div>
-        <div class="flex items-center gap-1.5 sm:gap-2">
-          <input
-            type="date"
-            v-model="endDate"
-            class="text-[13px] sm:text-sm border-none focus:ring-0 p-0 w-[105px] sm:w-32 bg-transparent"
-          />
+        <div
+          class="flex flex-row items-center gap-2 sm:gap-3 bg-white p-2 sm:p-3 rounded-xl border shadow-sm overflow-hidden relative"
+        >
+          <div
+            v-if="isFiltering"
+            class="absolute inset-0 bg-white/50 backdrop-blur-[1px] z-10 flex items-center justify-center"
+          >
+            <Loader2 class="h-4 w-4 text-blue-600 animate-spin" />
+          </div>
+
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <Calendar class="hidden xs:block h-4 w-4 text-gray-400" />
+            <input
+              type="date"
+              v-model="startDate"
+              class="text-[13px] sm:text-sm border-none focus:ring-0 p-0 w-[105px] sm:w-32 bg-transparent"
+              @input="selectedPeriod = 'custom'"
+            />
+          </div>
+          <div class="text-gray-300">|</div>
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <input
+              type="date"
+              v-model="endDate"
+              class="text-[13px] sm:text-sm border-none focus:ring-0 p-0 w-[105px] sm:w-32 bg-transparent"
+              @input="selectedPeriod = 'custom'"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -106,11 +144,14 @@ watch([startDate, endDate], loadStats)
 
       <!-- Total Pelaporan -->
       <div
-        class="group relative overflow-hidden rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md"
+        class="group cursor-pointer relative overflow-hidden rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-md"
       >
+      <a href="/pelaporan">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-medium text-gray-500">Total Laporan</p>
+            <p class="text-sm font-medium text-gray-500">
+                Total Laporan
+            </p>
             <p
               class="mt-2 text-3xl font-bold text-gray-900 transition-opacity duration-200"
               :class="{ 'opacity-50': isFiltering }"
@@ -126,6 +167,7 @@ watch([startDate, endDate], loadStats)
         </div>
         <div class="absolute bottom-0 left-0 h-1 w-full bg-orange-600"></div>
         <div class="mt-2 text-xs text-gray-400">Semua laporan dalam periode ini</div>
+        </a>
       </div>
 
       <!-- Prestasi -->

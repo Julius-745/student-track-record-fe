@@ -6,7 +6,7 @@ import { useModalStore } from '@/stores/useModalStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import DataTable from '@/components/ui/DataTable.vue'
 import Button from '@/components/ui/Button.vue'
-import { Plus, Pencil, Trash2, Eye, FileUp } from 'lucide-vue-next'
+import { Plus, Pencil, Trash2, FileUp } from 'lucide-vue-next'
 import { storeToRefs } from 'pinia'
 
 // Use stores directly
@@ -76,7 +76,7 @@ const openCreateModal = () => {
   modalStore.openModal('CREATE_SISWA')
 }
 
-const editSiswa = (bg: any) => {
+const editSiswa = (bg: unknown) => {
   modalStore.openModal('EDIT_SISWA', bg)
 }
 
@@ -150,7 +150,7 @@ const handleImport = async (event: Event) => {
         >
           <option value="">Semua Kelas</option>
           <option
-            v-for="cls in ['7A', '7B', '7C', '8A', '8B', '8C', '9A', '9B', '9C']"
+            v-for="cls in ['7A', '7B', '7C',  '7D',  '7E', '7F', '7G', '7H', '8A', '8B', '8C', '8D', '8E', '8F', '8G', '9A', '9B', '9C', '9D', '9E', '9F', '9G', '9H']"
             :key="cls"
             :value="cls"
           >
@@ -168,11 +168,11 @@ const handleImport = async (event: Event) => {
       :order="order"
       @sort="handleSort"
     >
+      <template #nama="{ item }">
+        <a :href="`/siswa/${item.id}`" class="cursor-pointer">{{ item.nama }}</a>
+      </template>
       <template #actions="{ item }">
         <div class="flex justify-end gap-2">
-          <Button variant="outline" size="icon" @click="$router.push(`/siswa/${item.id}`)">
-            <Eye class="h-4 w-4 text-gray-500" />
-          </Button>
           <Button
             v-if="user?.role === 'admin'"
             variant="outline"

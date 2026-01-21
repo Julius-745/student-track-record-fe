@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useModalStore } from '@/stores/useModalStore'
@@ -7,14 +7,10 @@ import { useDataStore } from '@/stores/useDataStore'
 import {
   LayoutDashboard,
   Users,
-  BookOpen,
   FileText,
   LogOut,
-  Menu,
-  X,
   UserCheck,
 } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
 import GlobalModal from '@/components/ui/GlobalModal.vue'
 import OfflineWarning from '@/components/OfflineWarning.vue'
 import Alert from '@/components/ui/Alert.vue'
@@ -59,22 +55,26 @@ const modalComponent = computed(() => {
       return null
   }
 })
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onModalCreateSiswaValues = async (values: any) => {
   await dataStore.addSiswa(values)
   modalStore.closeModal()
 }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onModalEditSiswaValues = async (values: any) => {
-  const id = modalContextData.value?.id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = modalContextData.value as any
+  const id = context?.id
   if (id) {
     await dataStore.updateSiswa(id, values)
     modalStore.closeModal()
   }
 }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onModalCreateGuruValues = async (values: any) => {
-  const id = modalContextData.value?.id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = modalContextData.value as any
+  const id = context?.id
   if (id) {
     await dataStore.updateGuru(id, values)
   } else {
@@ -82,14 +82,16 @@ const onModalCreateGuruValues = async (values: any) => {
   }
   modalStore.closeModal()
 }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onModalAddReportValues = async (values: any) => {
   await dataStore.addPelaporan(values)
   modalStore.closeModal()
 }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const onModalEditReportValues = async (values: any) => {
-  const id = modalContextData.value?.id
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = modalContextData.value as any
+  const id = context?.id
   if (id) {
     await dataStore.updatePelaporan(id, values)
     modalStore.closeModal()
@@ -97,7 +99,10 @@ const onModalEditReportValues = async (values: any) => {
 }
 
 const onModalConfirmDelete = async () => {
-  const { id, type } = modalContextData.value || {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const context = modalContextData.value as any || {}
+  const { id, type } = context
+
   if (!id || !type) return
 
   if (type === 'siswa') await dataStore.deleteSiswa(id)
@@ -123,27 +128,51 @@ const dynamicModalProps = computed(() => {
         initialData: modalContextData.value,
         loading: dataStore.isLoading,
       }
-    case 'ADD_REPORT':
+    case 'ADD_REPORT': {
+      // Check if we have pre-filled siswa data from context
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const context = modalContextData.value as any
+      const prefilledData = context?.siswa_id
+        ? {
+            siswa_id: context.siswa_id,
+            siswa: {
+              id: context.siswa_id,
+              nama: context.siswa_nama,
+              rombel: context.rombel,
+              nipd: context.nipd,
+            },
+            // Default values for form
+            jenis_pelaporan: 'pelanggaran', // Default
+            deskripsi: '',
+            tanggal: new Date().toISOString(),
+          }
+        : null
+
       return {
+        initialData: prefilledData,
         loading: dataStore.isLoading,
       }
+    }
     case 'EDIT_REPORT':
       return {
         initialData: modalContextData.value,
         loading: dataStore.isLoading,
       }
-    case 'CONFIRM_DELETE':
+    case 'CONFIRM_DELETE': {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const context = modalContextData.value as any
       return {
         loading: dataStore.isLoading,
-        title: modalContextData.value?.title,
-        message: modalContextData.value?.message,
+        title: context?.title,
+        message: context?.message,
       }
+    }
     default:
       return {}
   }
 })
 
-const handleModalSubmit = async (values: any) => {
+const handleModalSubmit = async (values: unknown) => {
   try {
     switch (modalType.value) {
       case 'CREATE_SISWA':
